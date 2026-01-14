@@ -34,7 +34,9 @@ export async function GET(request: NextRequest) {
     const client = getTheOddsAPIClient();
 
     // Fetch matches
+    console.log(`Fetching matches for sport: ${sport}, league: ${league}`);
     const events = await client.fetchMatches(sport, league);
+    console.log(`Received ${events.length} events from TheOddsAPI`);
 
     // Filter upcoming matches if requested
     const now = new Date();
@@ -124,10 +126,19 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error in /api/matches:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error details:', {
+      league,
+      sport: LEAGUE_SPORT_MAP[league],
+      errorMessage,
+      errorStack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       {
         error: 'Failed to fetch matches',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: errorMessage,
+        league,
+        sport: LEAGUE_SPORT_MAP[league],
       },
       { status: 500 }
     );

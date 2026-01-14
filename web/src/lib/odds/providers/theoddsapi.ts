@@ -90,13 +90,16 @@ export class TheOddsAPIClient {
       });
 
       if (!response.ok) {
-        throw new Error(`TheOddsAPI error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`TheOddsAPI error for ${sportKey}: ${response.status} ${response.statusText}`, errorText);
+        throw new Error(`TheOddsAPI error (${sportKey}): ${response.status} ${response.statusText} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log(`TheOddsAPI returned ${data.length} events for ${sportKey}`);
       return data as TheOddsAPIEvent[];
     } catch (error) {
-      console.error('Error fetching matches from TheOddsAPI:', error);
+      console.error(`Error fetching matches from TheOddsAPI for ${sportKey}:`, error);
       throw error;
     }
   }
