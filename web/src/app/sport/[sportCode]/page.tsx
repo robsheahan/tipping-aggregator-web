@@ -114,14 +114,11 @@ export default function SportPage() {
           Back to Sports
         </Link>
 
-        <div className="flex items-center gap-4 mb-4">
-          <span className="text-5xl">{sportConfig.icon}</span>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {sportConfig.displayName}
-            </h1>
-            <p className="text-gray-600">{sportConfig.name}</p>
-          </div>
+        <div className="mb-4">
+          <h1 className="text-3xl font-bold text-gray-900">
+            {sportConfig.displayName}
+          </h1>
+          <p className="text-gray-600">{sportConfig.name}</p>
         </div>
       </div>
 
