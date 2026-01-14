@@ -8,13 +8,19 @@ import { League, Match, MatchDetail } from './types';
 async function fetchAPI<T>(endpoint: string): Promise<T> {
   const response = await fetch(endpoint);
   if (!response.ok) {
-    // Try to get error message from response body
+    // Get response body as text first
+    const responseText = await response.text();
+    console.error('API error response:', responseText);
+
+    // Try to parse as JSON
     try {
-      const errorData = await response.json();
-      const errorMessage = errorData.message || errorData.error || response.statusText;
-      throw new Error(`API error: ${errorMessage}`);
-    } catch (e) {
-      throw new Error(`API error: ${response.statusText}`);
+      const errorData = JSON.parse(responseText);
+      const errorMessage = errorData.message || errorData.error || 'Unknown error';
+      throw new Error(`${errorMessage} (Status: ${response.status})`);
+    } catch (parseError) {
+      // If not JSON, use the text directly
+      const errorMessage = responseText || response.statusText || 'Unknown error';
+      throw new Error(`API error: ${errorMessage} (Status: ${response.status})`);
     }
   }
   return response.json();
