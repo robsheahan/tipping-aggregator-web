@@ -95,50 +95,33 @@ export default function Home() {
 
       {/* Sports Grid */}
       {loading ? (
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-slate-900">Available Sports</h2>
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-              Loading odds...
-            </div>
-          </div>
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <SportCard
-                key={i}
-                code=""
-                name=""
-                displayName=""
-                icon=""
-                color="blue"
-                matchCount={0}
-                loading={true}
-              />
-            ))}
-          </div>
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <SportCard
+              key={i}
+              code=""
+              name=""
+              displayName=""
+              icon=""
+              color="blue"
+              matchCount={0}
+              loading={true}
+            />
+          ))}
         </div>
       ) : (
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-slate-900">Available Sports</h2>
-            <div className="text-sm text-slate-500">
-              {sports.length} {sports.length === 1 ? 'sport' : 'sports'} with live odds
-            </div>
-          </div>
-          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {sports.map((sport) => (
-              <SportCard
-                key={sport.code}
-                code={sport.code}
-                name={sport.name}
-                displayName={sport.displayName || sport.code}
-                icon={sport.icon || '🏆'}
-                color={sport.color || 'blue'}
-                matchCount={sport.matchCount}
-              />
-            ))}
-          </div>
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+          {sports.map((sport) => (
+            <SportCard
+              key={sport.code}
+              code={sport.code}
+              name={sport.name}
+              displayName={sport.displayName || sport.code}
+              icon={sport.icon || '🏆'}
+              color={sport.color || 'blue'}
+              matchCount={sport.matchCount}
+            />
+          ))}
         </div>
       )}
 

@@ -32,12 +32,12 @@ export default function SportCard({
   };
 
   const badgeColors: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-700 ring-blue-600/20',
-    green: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-    red: 'bg-red-50 text-red-700 ring-red-600/20',
-    orange: 'bg-orange-50 text-orange-700 ring-orange-600/20',
-    purple: 'bg-purple-50 text-purple-700 ring-purple-600/20',
-    teal: 'bg-teal-50 text-teal-700 ring-teal-600/20',
+    blue: 'bg-blue-50 text-blue-700 ring-slate-200',
+    green: 'bg-emerald-50 text-emerald-700 ring-slate-200',
+    red: 'bg-red-50 text-red-700 ring-slate-200',
+    orange: 'bg-orange-50 text-orange-700 ring-slate-200',
+    purple: 'bg-purple-50 text-purple-700 ring-slate-200',
+    teal: 'bg-teal-50 text-teal-700 ring-slate-200',
   };
 
   const iconColors: Record<string, string> = {
@@ -52,12 +52,9 @@ export default function SportCard({
   if (loading) {
     return (
       <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-slate-300 p-6 animate-pulse">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-slate-200 rounded-lg" />
-          <div className="flex-1">
-            <div className="h-6 bg-slate-200 rounded w-20 mb-2" />
-            <div className="h-4 bg-slate-100 rounded w-32" />
-          </div>
+        <div className="mb-4">
+          <div className="h-6 bg-slate-200 rounded w-20 mb-2" />
+          <div className="h-4 bg-slate-100 rounded w-32" />
         </div>
         <div className="flex items-center justify-between mb-6">
           <div className="h-8 bg-slate-200 rounded w-16" />
@@ -76,20 +73,14 @@ export default function SportCard({
           ${accentColors[color] || accentColors.blue}
           p-6 transition-all duration-200
           hover:shadow-lg hover:-translate-y-1 hover:border-slate-300
-          focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2
         `}
       >
-        {/* Header with icon and title */}
-        <div className="flex items-center gap-3 mb-5">
-          <div className={`text-3xl ${iconColors[color] || iconColors.blue}`}>
-            {icon}
-          </div>
-          <div className="flex-1">
-            <h3 className="text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
-              {displayName}
-            </h3>
-            <p className="text-sm text-slate-500 line-clamp-1">{name}</p>
-          </div>
+        {/* Header with title */}
+        <div className="mb-5">
+          <h3 className="text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+            {displayName}
+          </h3>
+          <p className="text-sm text-slate-500 line-clamp-1">{name}</p>
         </div>
 
         {/* Match count with badge */}
