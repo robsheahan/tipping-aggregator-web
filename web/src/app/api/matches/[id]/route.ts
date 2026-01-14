@@ -41,15 +41,27 @@ export async function GET(
     // Fetch ALL matches for this sport and find the specific one
     // TheOddsAPI doesn't reliably support per-event endpoints, so we fetch all and filter
     const allEvents = await client.fetchMatches(sport, league);
+    console.log(`Found ${allEvents.length} total events for ${sport}/${league}`);
+    console.log(`Looking for event ID: ${eventId}`);
+    console.log(`Available event IDs: ${allEvents.map(e => e.id).join(', ')}`);
+
     const event = allEvents.find(e => e.id === eventId);
 
     if (!event) {
       console.warn(`Match ${eventId} not found in TheOddsAPI results`);
+      console.warn(`Searched among ${allEvents.length} events`);
       return NextResponse.json(
-        { error: 'Match not found or has expired', message: 'This match may have finished or is no longer available' },
+        {
+          error: 'Match not found or has expired',
+          message: `This match may have finished or is no longer available. Searched ${allEvents.length} events.`,
+          requestedId: eventId,
+          availableIds: allEvents.map(e => e.id).slice(0, 5)
+        },
         { status: 404 }
       );
     }
+
+    console.log(`Successfully found event: ${event.home_team} vs ${event.away_team}`);
 
     // Extract bookmaker odds
     const bookmakerOdds = client.extractBookmakerOdds(event);
