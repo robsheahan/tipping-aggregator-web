@@ -1,0 +1,65 @@
+═══════════════════════════════════════════════════════════════
+  GITHUB PAGES DEPLOYMENT - COPY & PASTE COMMANDS
+═══════════════════════════════════════════════════════════════
+
+✅ Git is already initialized and committed!
+✅ All 86 files are ready to push
+✅ Just follow these 3 steps:
+
+───────────────────────────────────────────────────────────────
+STEP 1: Create GitHub Repository (on GitHub website)
+───────────────────────────────────────────────────────────────
+
+1. Go to: https://github.com/new
+2. Repository name: tipping-aggregator
+3. Description: Production-ready sports tipping aggregator
+4. Visibility: Public
+5. Do NOT initialize with anything
+6. Click "Create repository"
+
+───────────────────────────────────────────────────────────────
+STEP 2: Push to GitHub (in terminal)
+───────────────────────────────────────────────────────────────
+
+REPLACE "YOUR_USERNAME" WITH YOUR GITHUB USERNAME!
+
+cd /home/robsheahan/tipping-aggregator
+
+git remote add origin https://github.com/YOUR_USERNAME/tipping-aggregator.git
+
+git push -u origin main
+
+───────────────────────────────────────────────────────────────
+STEP 3: Enable GitHub Pages (on GitHub website)
+───────────────────────────────────────────────────────────────
+
+1. Go to your repository on GitHub
+2. Click "Settings" tab
+3. Click "Pages" in left sidebar
+4. Under "Source":
+   - Select "Deploy from a branch"
+   - Branch: main
+   - Folder: / (root)
+5. Click "Save"
+6. Wait 2 minutes
+
+───────────────────────────────────────────────────────────────
+DONE! Your site will be live at:
+───────────────────────────────────────────────────────────────
+
+https://YOUR_USERNAME.github.io/tipping-aggregator/
+
+───────────────────────────────────────────────────────────────
+EXAMPLE (if your username is "johndoe"):
+───────────────────────────────────────────────────────────────
+
+git remote add origin https://github.com/johndoe/tipping-aggregator.git
+git push -u origin main
+
+Site URL: https://johndoe.github.io/tipping-aggregator/
+
+═══════════════════════════════════════════════════════════════
+
+For detailed instructions, see: GITHUB_PAGES_DEPLOY.md
+
+═══════════════════════════════════════════════════════════════
