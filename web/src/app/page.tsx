@@ -66,9 +66,9 @@ export default function Home() {
           Live odds from Australian bookmakers
         </div>
 
-        <h1 className="text-5xl sm:text-6xl font-bold text-slate-900 mb-6 tracking-tight">
+        <h1 className="text-5xl sm:text-6xl font-bold text-slate-900 mb-6 tracking-tight leading-tight px-4">
           Master Your Sports
-          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 py-1">
             Betting Strategy
           </span>
         </h1>
