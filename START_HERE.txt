@@ -1,0 +1,60 @@
+═══════════════════════════════════════════════════════════════════
+  🚀 GET YOUR LIVE SPORTS ODDS WEBSITE IN 5 MINUTES
+═══════════════════════════════════════════════════════════════════
+
+QUICKEST PATH TO LIVE URL:
+
+1. Create GitHub repo at: https://github.com/new
+   Name: tipping-aggregator
+
+2. Run on YOUR computer:
+   git remote add origin https://github.com/YOUR_USERNAME/tipping-aggregator.git
+   git push -u origin main
+
+3. Import to Vercel: https://vercel.com/new
+   - Select your GitHub repo
+   - Root Directory: web
+   - Add env: THEODDSAPI_KEY = (get from the-odds-api.com)
+   - Deploy
+
+4. Get URL: https://your-app.vercel.app 🎉
+
+═══════════════════════════════════════════════════════════════════
+  OR USE AUTOMATED SCRIPT:
+═══════════════════════════════════════════════════════════════════
+
+./PUSH_TO_GITHUB.sh
+
+Then follow the prompts!
+
+═══════════════════════════════════════════════════════════════════
+  NEED MORE HELP?
+═══════════════════════════════════════════════════════════════════
+
+Read these files in order:
+1. GITHUB_TO_VERCEL.md  - Complete step-by-step guide
+2. PUSH_TO_GITHUB.sh    - Automated push script
+3. TEST_LOCALLY.md      - Test before deploying
+
+═══════════════════════════════════════════════════════════════════
+  WHAT YOU'LL GET:
+═══════════════════════════════════════════════════════════════════
+
+✅ Live sports odds aggregator
+✅ EPL, AFL, NRL leagues
+✅ Multiple bookmakers
+✅ Smart tips with confidence
+✅ Mobile responsive
+✅ Free hosting
+
+═══════════════════════════════════════════════════════════════════
+  IMPORTANT NOTES:
+═══════════════════════════════════════════════════════════════════
+
+• Must set Root Directory to "web" in Vercel
+• Must add THEODDSAPI_KEY environment variable
+• Get free API key at: https://the-odds-api.com/
+
+═══════════════════════════════════════════════════════════════════
+
+Questions? Check: GITHUB_TO_VERCEL.md
