@@ -28,7 +28,7 @@ export default function SportCard({
     red: 'border-red-500',
     orange: 'border-orange-500',
     purple: 'border-purple-500',
-    teal: 'border-teal-500',
+    cyan: 'border-cyan-500',
   };
 
   // Use same neutral badge styling for all sports
@@ -51,13 +51,14 @@ export default function SportCard({
   }
 
   return (
-    <Link href={`/sport/${code.toLowerCase()}`} className="group block">
+    <Link href={`/sport/${code.toLowerCase()}`} className="group block focus:outline-none">
       <div
         className={`
           bg-white rounded-xl border-2 border-slate-200 border-t-4
           ${accentColors[color] || accentColors.blue}
           p-6 transition-all duration-200
           hover:shadow-lg hover:-translate-y-1 hover:border-slate-300
+          focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2
         `}
       >
         {/* Header with title */}

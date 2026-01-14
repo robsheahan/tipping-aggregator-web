@@ -69,7 +69,7 @@ export const SPORTS: Record<string, SportConfig> = {
     name: 'Super Rugby Pacific',
     displayName: 'Super Rugby',
     icon: '🏉',
-    color: 'teal',
+    color: 'cyan',
     theoddsapiKey: 'rugbyunion_super_rugby',
     theoddsapiSport: 'rugbyunion',
     marketType: '2way',
