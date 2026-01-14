@@ -21,7 +21,7 @@ export default function SportCard({
   matchCount,
   loading = false,
 }: SportCardProps) {
-  // Accent color for top border and badge
+  // Accent color for top border
   const accentColors: Record<string, string> = {
     blue: 'border-blue-500',
     green: 'border-emerald-500',
@@ -31,23 +31,8 @@ export default function SportCard({
     teal: 'border-teal-500',
   };
 
-  const badgeColors: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-700 ring-slate-200',
-    green: 'bg-emerald-50 text-emerald-700 ring-slate-200',
-    red: 'bg-red-50 text-red-700 ring-slate-200',
-    orange: 'bg-orange-50 text-orange-700 ring-slate-200',
-    purple: 'bg-purple-50 text-purple-700 ring-slate-200',
-    teal: 'bg-teal-50 text-teal-700 ring-slate-200',
-  };
-
-  const iconColors: Record<string, string> = {
-    blue: 'text-blue-500',
-    green: 'text-emerald-500',
-    red: 'text-red-500',
-    orange: 'text-orange-500',
-    purple: 'text-purple-500',
-    teal: 'text-teal-500',
-  };
+  // Use same neutral badge styling for all sports
+  const badgeStyle = 'bg-slate-50 text-slate-700 ring-slate-200';
 
   if (loading) {
     return (
@@ -96,7 +81,7 @@ export default function SportCard({
           <div
             className={`
               px-3 py-1.5 rounded-full text-xs font-semibold ring-1 ring-inset
-              ${badgeColors[color] || badgeColors.blue}
+              ${badgeStyle}
             `}
           >
             Live Odds
