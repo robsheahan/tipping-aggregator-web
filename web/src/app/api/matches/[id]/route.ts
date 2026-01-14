@@ -38,11 +38,13 @@ export async function GET(
 
     console.log(`Fetching match details for event ${eventId}, sport: ${sport}, league: ${league}`);
 
-    // Fetch match odds
-    const event = await client.fetchMatchOdds(eventId, sport, league);
+    // Fetch ALL matches for this sport and find the specific one
+    // TheOddsAPI doesn't reliably support per-event endpoints, so we fetch all and filter
+    const allEvents = await client.fetchMatches(sport, league);
+    const event = allEvents.find(e => e.id === eventId);
 
     if (!event) {
-      console.warn(`Match ${eventId} not found in TheOddsAPI`);
+      console.warn(`Match ${eventId} not found in TheOddsAPI results`);
       return NextResponse.json(
         { error: 'Match not found or has expired', message: 'This match may have finished or is no longer available' },
         { status: 404 }
