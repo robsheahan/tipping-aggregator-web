@@ -122,7 +122,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(matches, {
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        // Reduce cache time to 60 seconds so match IDs stay fresh
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
       },
     });
   } catch (error) {

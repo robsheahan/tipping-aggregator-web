@@ -21,7 +21,7 @@ export default function MatchCard({ match }: MatchCardProps) {
       : 'Draw';
 
   return (
-    <Link href={`/matches/${match.id}`}>
+    <Link href={`/matches/${match.id}?league=${match.league.code}`}>
       <div className="card hover:shadow-md transition-shadow cursor-pointer">
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
