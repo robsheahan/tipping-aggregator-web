@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Tipping Aggregator',
+  title: 'Tip Master',
   description: 'Aggregate sports tipping probabilities from multiple providers',
 };
 
@@ -19,7 +19,7 @@ export default function RootLayout({
             <div className="flex justify-between h-16 items-center">
               <div className="flex items-center">
                 <h1 className="text-xl font-bold text-gray-900">
-                  Tipping Aggregator
+                  Tip Master
                 </h1>
               </div>
               <div className="flex gap-4">
