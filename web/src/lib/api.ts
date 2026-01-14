@@ -4,6 +4,7 @@
  */
 
 import { League, Match, MatchDetail } from './types';
+import { RoundDefinition } from './rounds/roundMappings';
 
 async function fetchAPI<T>(endpoint: string): Promise<T> {
   const response = await fetch(endpoint);
@@ -54,4 +55,8 @@ export async function getMatch(id: string, league?: string): Promise<MatchDetail
 
   const query = searchParams.toString();
   return fetchAPI<MatchDetail>(`/api/matches/${id}${query ? `?${query}` : ''}`);
+}
+
+export async function getRounds(league: string): Promise<RoundDefinition[]> {
+  return fetchAPI<RoundDefinition[]>(`/api/rounds?league=${league}`);
 }

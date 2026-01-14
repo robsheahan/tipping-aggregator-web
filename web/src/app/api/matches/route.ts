@@ -8,7 +8,7 @@ import { getTheOddsAPIClient } from '@/lib/odds/providers/theoddsapi';
 import { aggregateProviderOdds } from '@/lib/odds/aggregation';
 import { generateWeightMapForProviders } from '@/lib/odds/weighting';
 import { getSportConfig } from '@/lib/config/sports';
-import { getRoundsForLeague } from '@/lib/rounds/roundMappings';
+import { generateRoundsFromMatches } from '@/lib/rounds/roundMappings';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -47,7 +47,8 @@ export async function GET(request: NextRequest) {
 
     // Filter by round if specified
     if (roundNumber !== null) {
-      const rounds = getRoundsForLeague(league, league);
+      // Generate rounds from all matches to determine date ranges
+      const rounds = generateRoundsFromMatches(filteredEvents, league);
       const roundDef = rounds.find(r => r.roundNumber === roundNumber);
 
       if (roundDef) {
@@ -144,7 +145,7 @@ export async function GET(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('Error details:', {
       league,
-      sport: LEAGUE_SPORT_MAP[league],
+      sport,
       errorMessage,
       errorStack: error instanceof Error ? error.stack : undefined,
     });
@@ -153,7 +154,7 @@ export async function GET(request: NextRequest) {
         error: 'Failed to fetch matches',
         message: errorMessage,
         league,
-        sport: LEAGUE_SPORT_MAP[league],
+        sport,
       },
       { status: 500 }
     );

@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getMatches } from '@/lib/api';
+import { getMatches, getRounds } from '@/lib/api';
 import { Match } from '@/lib/types';
 import { getSportConfig } from '@/lib/config/sports';
-import { getRoundsForLeague } from '@/lib/rounds/roundMappings';
+import { RoundDefinition } from '@/lib/rounds/roundMappings';
 import MatchCard from '@/components/MatchCard';
 import RoundFilter from '@/components/RoundFilter';
 
@@ -15,15 +15,13 @@ export default function SportPage() {
   const sportCode = (params.sportCode as string).toUpperCase();
 
   const [matches, setMatches] = useState<Match[]>([]);
+  const [rounds, setRounds] = useState<RoundDefinition[]>([]);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Get sport config
   const sportConfig = getSportConfig(sportCode);
-
-  // Get rounds for this sport
-  const rounds = sportConfig ? getRoundsForLeague(sportCode, sportCode) : [];
 
   useEffect(() => {
     if (!sportConfig) {
@@ -32,26 +30,31 @@ export default function SportPage() {
       return;
     }
 
-    async function loadMatches() {
+    async function loadData() {
       try {
         setLoading(true);
         setError(null);
 
-        const data = await getMatches({
-          league: sportCode,
-          upcoming_only: true,
-          round: selectedRound !== null ? selectedRound : undefined,
-        });
+        // Fetch matches and rounds in parallel
+        const [matchesData, roundsData] = await Promise.all([
+          getMatches({
+            league: sportCode,
+            upcoming_only: true,
+            round: selectedRound !== null ? selectedRound : undefined,
+          }),
+          getRounds(sportCode),
+        ]);
 
-        setMatches(data);
+        setMatches(matchesData);
+        setRounds(roundsData);
         setLoading(false);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load matches');
+        setError(err instanceof Error ? err.message : 'Failed to load data');
         setLoading(false);
       }
     }
 
-    loadMatches();
+    loadData();
   }, [sportCode, selectedRound, sportConfig]);
 
   if (!sportConfig) {
