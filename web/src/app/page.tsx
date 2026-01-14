@@ -69,12 +69,12 @@ export default function Home() {
         <h1 className="text-5xl sm:text-6xl font-bold text-slate-900 mb-6 tracking-tight leading-tight px-4">
           Master Your Sports
           <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 py-1">
-            Betting Strategy
+            Tipping Strategy
           </span>
         </h1>
 
         <p className="text-xl text-slate-600 leading-relaxed">
-          Aggregate probabilities from multiple bookmakers to make informed betting decisions across all major sports.
+          Aggregate probabilities from multiple bookmakers to make informed tipping decisions across all major sports.
         </p>
       </div>
 
