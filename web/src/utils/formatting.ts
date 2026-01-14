@@ -1,11 +1,11 @@
 import { format, parseISO } from 'date-fns';
 
-export function formatProbability(prob: number | undefined): string {
+export function formatProbability(prob: number | undefined | null): string {
   if (prob === undefined || prob === null) return 'N/A';
   return `${(prob * 100).toFixed(1)}%`;
 }
 
-export function formatConfidence(confidence: number | undefined): string {
+export function formatConfidence(confidence: number | undefined | null): string {
   if (confidence === undefined || confidence === null) return 'N/A';
   const percent = confidence * 100;
   if (percent >= 70) return `${percent.toFixed(1)}% (High)`;
