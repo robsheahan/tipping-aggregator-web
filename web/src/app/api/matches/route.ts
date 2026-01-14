@@ -16,19 +16,20 @@ const LEAGUE_SPORT_MAP: { [league: string]: string } = {
 };
 
 export async function GET(request: NextRequest) {
-  try {
-    const searchParams = request.nextUrl.searchParams;
-    const league = searchParams.get('league') || 'EPL';
-    const upcomingOnly = searchParams.get('upcoming_only') !== 'false';
+  const searchParams = request.nextUrl.searchParams;
+  const league = searchParams.get('league') || 'EPL';
+  const upcomingOnly = searchParams.get('upcoming_only') !== 'false';
 
-    // Get sport from league
-    const sport = LEAGUE_SPORT_MAP[league];
-    if (!sport) {
-      return NextResponse.json(
-        { error: `Unknown league: ${league}` },
-        { status: 400 }
-      );
-    }
+  // Get sport from league
+  const sport = LEAGUE_SPORT_MAP[league];
+  if (!sport) {
+    return NextResponse.json(
+      { error: `Unknown league: ${league}` },
+      { status: 400 }
+    );
+  }
+
+  try {
 
     // Get TheOddsAPI client
     const client = getTheOddsAPIClient();
