@@ -25,7 +25,7 @@ export default function MatchCard({ match }: MatchCardProps) {
       <div className="card hover:shadow-md transition-shadow cursor-pointer">
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-500">{match.league}</span>
+            <span className="text-sm text-gray-500">{match.league.code}</span>
             <span className="text-sm font-medium text-gray-700">
               {formatTimeUntil(match.kickoff_time)}
             </span>

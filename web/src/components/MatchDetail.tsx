@@ -13,7 +13,7 @@ export default function MatchDetail({ match }: MatchDetailProps) {
           {match.home_team.name} vs {match.away_team.name}
         </h2>
         <p className="text-sm text-gray-600">
-          {formatDateTime(match.kickoff_time)} • {match.league}
+          {formatDateTime(match.kickoff_time)} • {match.league.code}
         </p>
       </div>
 
