@@ -23,6 +23,15 @@ const SPORT_KEYS: { [sport: string]: { [league: string]: string } } = {
   nrl: {
     NRL: 'rugbyleague_nrl',
   },
+  americanfootball: {
+    NFL: 'americanfootball_nfl',
+  },
+  basketball: {
+    NBA: 'basketball_nba',
+  },
+  rugbyunion: {
+    RUGBY: 'rugbyunion_super_rugby',
+  },
 };
 
 /**

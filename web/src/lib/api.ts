@@ -33,11 +33,15 @@ export async function getLeagues(): Promise<League[]> {
 export async function getMatches(params?: {
   league?: string;
   upcoming_only?: boolean;
+  round?: number;
 }): Promise<Match[]> {
   const searchParams = new URLSearchParams();
   if (params?.league) searchParams.append('league', params.league);
   if (params?.upcoming_only !== undefined) {
     searchParams.append('upcoming_only', String(params.upcoming_only));
+  }
+  if (params?.round !== undefined) {
+    searchParams.append('round', String(params.round));
   }
 
   const query = searchParams.toString();

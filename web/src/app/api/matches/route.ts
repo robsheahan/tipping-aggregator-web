@@ -7,27 +7,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTheOddsAPIClient } from '@/lib/odds/providers/theoddsapi';
 import { aggregateProviderOdds } from '@/lib/odds/aggregation';
 import { generateWeightMapForProviders } from '@/lib/odds/weighting';
-
-// League mapping for sport determination
-const LEAGUE_SPORT_MAP: { [league: string]: string } = {
-  EPL: 'soccer',
-  AFL: 'afl',
-  NRL: 'nrl',
-};
+import { getSportConfig } from '@/lib/config/sports';
+import { getRoundsForLeague } from '@/lib/rounds/roundMappings';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const league = searchParams.get('league') || 'EPL';
   const upcomingOnly = searchParams.get('upcoming_only') !== 'false';
+  const roundNumber = searchParams.get('round')
+    ? parseInt(searchParams.get('round')!)
+    : null;
 
-  // Get sport from league
-  const sport = LEAGUE_SPORT_MAP[league];
-  if (!sport) {
+  // Get sport config
+  const sportConfig = getSportConfig(league);
+  if (!sportConfig) {
     return NextResponse.json(
       { error: `Unknown league: ${league}` },
       { status: 400 }
     );
   }
+
+  const sport = sportConfig.theoddsapiSport;
 
   try {
 
@@ -41,9 +41,22 @@ export async function GET(request: NextRequest) {
 
     // Filter upcoming matches if requested
     const now = new Date();
-    const filteredEvents = upcomingOnly
+    let filteredEvents = upcomingOnly
       ? events.filter(e => new Date(e.commence_time) > now)
       : events;
+
+    // Filter by round if specified
+    if (roundNumber !== null) {
+      const rounds = getRoundsForLeague(league, league);
+      const roundDef = rounds.find(r => r.roundNumber === roundNumber);
+
+      if (roundDef) {
+        filteredEvents = filteredEvents.filter(e => {
+          const matchDate = new Date(e.commence_time);
+          return matchDate >= roundDef.startDate && matchDate <= roundDef.endDate;
+        });
+      }
+    }
 
     // Process each match
     const matches = await Promise.all(
@@ -72,7 +85,7 @@ export async function GET(request: NextRequest) {
           }
 
           // Convert to provider odds format
-          const marketType = sport === 'soccer' ? '3way' : '2way';
+          const marketType = sportConfig.marketType;
           const providerOdds = client.convertToProviderOdds(
             bookmakerOdds,
             marketType

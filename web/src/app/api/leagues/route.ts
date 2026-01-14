@@ -4,31 +4,25 @@
  */
 
 import { NextResponse } from 'next/server';
+import { getAllSports } from '@/lib/config/sports';
 
 export async function GET() {
-  const leagues = [
-    {
-      id: 1,
-      name: 'English Premier League',
-      sport: 'soccer',
-      code: 'EPL',
-      country: 'England',
-    },
-    {
-      id: 2,
-      name: 'Australian Football League',
-      sport: 'afl',
-      code: 'AFL',
-      country: 'Australia',
-    },
-    {
-      id: 3,
-      name: 'National Rugby League',
-      sport: 'nrl',
-      code: 'NRL',
-      country: 'Australia',
-    },
-  ];
+  // Generate leagues from sport config
+  const leagues = getAllSports().map((sport, index) => ({
+    id: index + 1,
+    name: sport.name,
+    sport: sport.theoddsapiSport,
+    code: sport.code,
+    country:
+      sport.code === 'EPL'
+        ? 'England'
+        : sport.code === 'NFL' || sport.code === 'NBA'
+        ? 'USA'
+        : 'Australia',
+    icon: sport.icon,
+    color: sport.color,
+    displayName: sport.displayName,
+  }));
 
   return NextResponse.json(leagues, {
     headers: {

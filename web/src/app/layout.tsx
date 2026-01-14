@@ -24,7 +24,7 @@ export default function RootLayout({
               </div>
               <div className="flex gap-4">
                 <a href="/" className="text-gray-600 hover:text-gray-900">
-                  Matches
+                  Home
                 </a>
                 <a href="/admin" className="text-gray-600 hover:text-gray-900">
                   Admin

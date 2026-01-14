@@ -9,6 +9,9 @@ export interface League {
   sport: string;
   code: string;
   country?: string;
+  icon?: string;
+  color?: string;
+  displayName?: string;
 }
 
 export interface TeamInfo {
