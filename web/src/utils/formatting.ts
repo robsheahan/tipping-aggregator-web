@@ -53,7 +53,7 @@ export function getTipColor(tip: string | undefined): string {
   return 'text-yellow-600';
 }
 
-export function getConfidenceColor(confidence: number | undefined): string {
+export function getConfidenceColor(confidence: number | undefined | null): string {
   if (!confidence) return 'text-gray-500';
   const percent = confidence * 100;
   if (percent >= 70) return 'text-green-600';
