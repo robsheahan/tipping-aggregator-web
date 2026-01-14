@@ -7,13 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getTheOddsAPIClient } from '@/lib/odds/providers/theoddsapi';
 import { aggregateProviderOdds } from '@/lib/odds/aggregation';
 import { generateWeightMapForProviders } from '@/lib/odds/weighting';
-
-// League mapping
-const LEAGUE_SPORT_MAP: { [league: string]: string } = {
-  EPL: 'soccer',
-  AFL: 'afl',
-  NRL: 'nrl',
-};
+import { getSportConfig } from '@/lib/config/sports';
 
 export async function GET(
   request: NextRequest,
@@ -23,14 +17,16 @@ export async function GET(
   const searchParams = request.nextUrl.searchParams;
   const league = searchParams.get('league') || 'EPL';
 
-  // Get sport from league
-  const sport = LEAGUE_SPORT_MAP[league];
-  if (!sport) {
+  // Get sport config
+  const sportConfig = getSportConfig(league);
+  if (!sportConfig) {
     return NextResponse.json(
       { error: `Unknown league: ${league}` },
       { status: 400 }
     );
   }
+
+  const sport = sportConfig.theoddsapiSport;
 
   try {
     // Get TheOddsAPI client
@@ -87,7 +83,7 @@ export async function GET(
     }
 
     // Convert to provider odds format
-    const marketType = sport === 'soccer' ? '3way' : '2way';
+    const marketType = sportConfig.marketType;
     const providerOdds = client.convertToProviderOdds(
       bookmakerOdds,
       marketType
