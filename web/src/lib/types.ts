@@ -1,3 +1,8 @@
+/**
+ * Frontend types for serverless architecture
+ * Simplified - no database IDs, live odds only
+ */
+
 export interface League {
   id: number;
   name: string;
@@ -7,63 +12,40 @@ export interface League {
 }
 
 export interface TeamInfo {
-  id: number;
   name: string;
-  short_name?: string;
 }
 
 export interface Match {
-  id: number;
+  id: string;
   home_team: TeamInfo;
   away_team: TeamInfo;
-  league: string;
+  league: {
+    code: string;
+    name: string;
+    sport: string;
+  };
   kickoff_time: string;
   status: string;
-  round?: string;
-  home_prob?: number;
-  away_prob?: number;
-  draw_prob?: number;
-  tip?: string;
-  confidence?: number;
+  home_prob: number | null;
+  away_prob: number | null;
+  draw_prob?: number | null;
+  tip: 'home' | 'away' | 'draw' | null;
+  confidence: number | null;
   contributing_providers: number;
-  last_updated?: string;
+  last_updated: string | null;
 }
 
-export interface Snapshot {
-  id: number;
-  match_id: number;
-  provider_id: number;
-  market_type: string;
-  captured_at: string;
+export interface ProviderOddsDetail {
+  provider: string;
   home_prob: number;
   away_prob: number;
   draw_prob?: number;
-  raw_odds?: Record<string, number>;
+  home_odds: number;
+  away_odds: number;
+  draw_odds?: number;
+  timestamp: string;
 }
 
-export interface Provider {
-  id: number;
-  name: string;
-  type: string;
-  enabled: boolean;
-  description?: string;
-}
-
-export interface Weight {
-  provider_id: number;
-  provider_name: string;
-  league_id: number;
-  league_name: string;
-  market_type: string;
-  weight: number;
-  updated_at: string;
-}
-
-export interface ProviderHealth {
-  provider_id: number;
-  provider_name: string;
-  status: string;
-  message: string;
-  latency_ms: number;
-  checked_at: string;
+export interface MatchDetail extends Match {
+  provider_odds: ProviderOddsDetail[];
 }
