@@ -47,11 +47,8 @@ export default function SportCard({
           ${colorClasses[color] || colorClasses.blue}
         `}
       >
-        {/* Icon */}
-        <div className="text-6xl mb-4 text-center">{icon}</div>
-
         {/* Sport Name */}
-        <h2 className="text-2xl font-bold text-center mb-2">{displayName}</h2>
+        <h2 className="text-3xl font-bold text-center mb-2">{displayName}</h2>
         <p className="text-sm text-center text-gray-600 mb-6">{name}</p>
 
         {/* Match Count */}

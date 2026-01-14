@@ -25,6 +25,34 @@ export interface RoundMappings {
 }
 
 /**
+ * Format a date as "Mon, Jan 15"
+ */
+function formatMatchDate(date: Date): string {
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric'
+  };
+  return date.toLocaleDateString('en-US', options);
+}
+
+/**
+ * Create a label for a round based on its date range
+ */
+function createRoundLabel(startDate: Date, endDate: Date): string {
+  const startFormatted = formatMatchDate(startDate);
+  const endFormatted = formatMatchDate(endDate);
+
+  // If same day, just show one date
+  if (startDate.toDateString() === endDate.toDateString()) {
+    return startFormatted;
+  }
+
+  // If different days, show range
+  return `${startFormatted} - ${endFormatted}`;
+}
+
+/**
  * Automatically generate rounds by analyzing match dates
  * Groups matches that occur within the same week into rounds
  */
@@ -38,10 +66,6 @@ export function generateRoundsFromMatches(
   const sortedMatches = [...matches].sort(
     (a, b) => new Date(a.commence_time).getTime() - new Date(b.commence_time).getTime()
   );
-
-  // Determine label format based on sport
-  const usesWeekLabel = ['NFL', 'NBA'].includes(sportCode);
-  const labelPrefix = usesWeekLabel ? 'Week' : sportCode === 'EPL' ? 'Matchweek' : 'Round';
 
   const rounds: RoundDefinition[] = [];
   let currentRound: { matches: Date[]; roundNumber: number } | null = null;
@@ -64,7 +88,7 @@ export function generateRoundsFromMatches(
 
         rounds.push({
           roundNumber: currentRound.roundNumber,
-          label: `${labelPrefix} ${currentRound.roundNumber}`,
+          label: createRoundLabel(startDate, endDate),
           startDate,
           endDate,
         });
@@ -85,7 +109,7 @@ export function generateRoundsFromMatches(
 
     rounds.push({
       roundNumber: currentRound.roundNumber,
-      label: `${labelPrefix} ${currentRound.roundNumber}`,
+      label: createRoundLabel(startDate, endDate),
       startDate,
       endDate,
     });

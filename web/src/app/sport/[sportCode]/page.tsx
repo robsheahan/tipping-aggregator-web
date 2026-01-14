@@ -18,11 +18,13 @@ export default function SportPage() {
   const [rounds, setRounds] = useState<RoundDefinition[]>([]);
   const [selectedRound, setSelectedRound] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [roundsLoaded, setRoundsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Get sport config
   const sportConfig = getSportConfig(sportCode);
 
+  // Load rounds once on mount
   useEffect(() => {
     if (!sportConfig) {
       setError(`Unknown sport: ${sportCode}`);
@@ -30,32 +32,52 @@ export default function SportPage() {
       return;
     }
 
-    async function loadData() {
+    async function loadRounds() {
       try {
-        setLoading(true);
-        setError(null);
-
-        // Fetch matches and rounds in parallel
-        const [matchesData, roundsData] = await Promise.all([
-          getMatches({
-            league: sportCode,
-            upcoming_only: true,
-            round: selectedRound !== null ? selectedRound : undefined,
-          }),
-          getRounds(sportCode),
-        ]);
-
-        setMatches(matchesData);
+        const roundsData = await getRounds(sportCode);
         setRounds(roundsData);
-        setLoading(false);
+        setRoundsLoaded(true);
+
+        // Auto-select the first (upcoming) round if available
+        if (roundsData.length > 0) {
+          setSelectedRound(roundsData[0].roundNumber);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load data');
+        setError(err instanceof Error ? err.message : 'Failed to load rounds');
         setLoading(false);
       }
     }
 
-    loadData();
-  }, [sportCode, selectedRound, sportConfig]);
+    loadRounds();
+  }, [sportCode, sportConfig]);
+
+  // Load matches when sport or selected round changes
+  useEffect(() => {
+    if (!sportConfig || !roundsLoaded) {
+      return;
+    }
+
+    async function loadMatches() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const matchesData = await getMatches({
+          league: sportCode,
+          upcoming_only: true,
+          round: selectedRound !== null ? selectedRound : undefined,
+        });
+
+        setMatches(matchesData);
+        setLoading(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load matches');
+        setLoading(false);
+      }
+    }
+
+    loadMatches();
+  }, [sportCode, selectedRound, sportConfig, roundsLoaded]);
 
   if (!sportConfig) {
     return (
