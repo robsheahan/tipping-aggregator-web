@@ -19,29 +19,32 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const eventId = params.id;
+  const searchParams = request.nextUrl.searchParams;
+  const league = searchParams.get('league') || 'EPL';
+
+  // Get sport from league
+  const sport = LEAGUE_SPORT_MAP[league];
+  if (!sport) {
+    return NextResponse.json(
+      { error: `Unknown league: ${league}` },
+      { status: 400 }
+    );
+  }
+
   try {
-    const eventId = params.id;
-    const searchParams = request.nextUrl.searchParams;
-    const league = searchParams.get('league') || 'EPL';
-
-    // Get sport from league
-    const sport = LEAGUE_SPORT_MAP[league];
-    if (!sport) {
-      return NextResponse.json(
-        { error: `Unknown league: ${league}` },
-        { status: 400 }
-      );
-    }
-
     // Get TheOddsAPI client
     const client = getTheOddsAPIClient();
+
+    console.log(`Fetching match details for event ${eventId}, sport: ${sport}, league: ${league}`);
 
     // Fetch match odds
     const event = await client.fetchMatchOdds(eventId, sport, league);
 
     if (!event) {
+      console.warn(`Match ${eventId} not found in TheOddsAPI`);
       return NextResponse.json(
-        { error: 'Match not found' },
+        { error: 'Match not found or has expired', message: 'This match may have finished or is no longer available' },
         { status: 404 }
       );
     }
@@ -114,11 +117,22 @@ export async function GET(
       }
     );
   } catch (error) {
-    console.error('Error in /api/matches/[id]:', error);
+    console.error(`Error in /api/matches/[id] for event ${eventId}:`, error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error details:', {
+      eventId,
+      league,
+      sport,
+      errorMessage,
+      errorStack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       {
         error: 'Failed to fetch match details',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: errorMessage,
+        eventId,
+        league,
+        sport,
       },
       { status: 500 }
     );

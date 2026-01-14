@@ -44,8 +44,19 @@ export default function MatchDetailPage() {
 
   if (error || !match) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
-        Error: {error || 'Match not found'}
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md">
+          <p className="font-semibold mb-2">Match Not Available</p>
+          <p className="text-sm mb-4">
+            {error || 'This match may have finished or is no longer available from our data provider.'}
+          </p>
+          <a
+            href="/"
+            className="inline-block bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded text-sm transition-colors"
+          >
+            ← Back to Matches
+          </a>
+        </div>
       </div>
     );
   }
