@@ -3,57 +3,26 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { getMatches, getRounds } from '@/lib/api';
+import { getMatches } from '@/lib/api';
 import { Match } from '@/lib/types';
 import { getSportConfig } from '@/lib/config/sports';
-import { RoundDefinition } from '@/lib/rounds/roundMappings';
 import MatchCard from '@/components/MatchCard';
-import RoundFilter from '@/components/RoundFilter';
 
 export default function SportPage() {
   const params = useParams();
   const sportCode = (params.sportCode as string).toUpperCase();
 
   const [matches, setMatches] = useState<Match[]>([]);
-  const [rounds, setRounds] = useState<RoundDefinition[]>([]);
-  const [selectedRound, setSelectedRound] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [roundsLoaded, setRoundsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Get sport config
   const sportConfig = getSportConfig(sportCode);
 
-  // Load rounds once on mount
   useEffect(() => {
     if (!sportConfig) {
       setError(`Unknown sport: ${sportCode}`);
       setLoading(false);
-      return;
-    }
-
-    async function loadRounds() {
-      try {
-        const roundsData = await getRounds(sportCode);
-        setRounds(roundsData);
-        setRoundsLoaded(true);
-
-        // Auto-select the first (upcoming) round if available
-        if (roundsData.length > 0) {
-          setSelectedRound(roundsData[0].roundNumber);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load rounds');
-        setLoading(false);
-      }
-    }
-
-    loadRounds();
-  }, [sportCode, sportConfig]);
-
-  // Load matches when sport or selected round changes
-  useEffect(() => {
-    if (!sportConfig || !roundsLoaded) {
       return;
     }
 
@@ -65,7 +34,6 @@ export default function SportPage() {
         const matchesData = await getMatches({
           league: sportCode,
           upcoming_only: true,
-          round: selectedRound !== null ? selectedRound : undefined,
         });
 
         setMatches(matchesData);
@@ -77,7 +45,7 @@ export default function SportPage() {
     }
 
     loadMatches();
-  }, [sportCode, selectedRound, sportConfig, roundsLoaded]);
+  }, [sportCode, sportConfig]);
 
   if (!sportConfig) {
     return (
@@ -122,16 +90,6 @@ export default function SportPage() {
         </div>
       </div>
 
-      {/* Round filter */}
-      {rounds.length > 0 && (
-        <RoundFilter
-          rounds={rounds}
-          selectedRound={selectedRound}
-          onRoundChange={setSelectedRound}
-          sportColor={sportConfig.color}
-        />
-      )}
-
       {/* Error state */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-md mb-6">
@@ -147,11 +105,7 @@ export default function SportPage() {
         </div>
       ) : matches.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-gray-600">
-            {selectedRound !== null
-              ? 'No matches found for this round'
-              : 'No upcoming matches found'}
-          </p>
+          <p className="text-gray-600">No upcoming matches found</p>
         </div>
       ) : (
         <>
