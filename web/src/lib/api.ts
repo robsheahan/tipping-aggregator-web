@@ -8,7 +8,14 @@ import { League, Match, MatchDetail } from './types';
 async function fetchAPI<T>(endpoint: string): Promise<T> {
   const response = await fetch(endpoint);
   if (!response.ok) {
-    throw new Error(`API error: ${response.statusText}`);
+    // Try to get error message from response body
+    try {
+      const errorData = await response.json();
+      const errorMessage = errorData.message || errorData.error || response.statusText;
+      throw new Error(`API error: ${errorMessage}`);
+    } catch (e) {
+      throw new Error(`API error: ${response.statusText}`);
+    }
   }
   return response.json();
 }
