@@ -32,6 +32,9 @@ const SPORT_KEYS: { [sport: string]: { [league: string]: string } } = {
   rugbyunion: {
     RUGBY: 'rugbyunion_super_rugby',
   },
+  horse_racing: {
+    RACING: 'horse_racing_australia',
+  },
 };
 
 /**

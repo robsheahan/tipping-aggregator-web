@@ -30,47 +30,19 @@ export default function HorseRacingPage() {
   const [selectedVenue, setSelectedVenue] = useState<string | null>(null);
 
   useEffect(() => {
-    // TODO: Replace with actual API call to TheOddsAPI
     async function loadRacingData() {
       try {
         setLoading(true);
 
-        // Mock data for now - replace with actual API call
-        const mockRaces: Race[] = [
-          {
-            id: 'flemington-r1',
-            venue: 'Flemington',
-            raceNumber: 1,
-            startTime: new Date(Date.now() + 30 * 60000).toISOString(),
-            distance: '1200m',
-            status: 'upcoming',
-            runners: [
-              {
-                number: 1,
-                name: 'Lightning Bolt',
-                odds: { sportsbet: 3.5, ladbrokes: 3.6, neds: 3.4 },
-                bestOdds: 3.6,
-                bestBookmaker: 'ladbrokes',
-              },
-              {
-                number: 2,
-                name: 'Thunder Strike',
-                odds: { sportsbet: 5.0, ladbrokes: 4.8, neds: 5.2 },
-                bestOdds: 5.2,
-                bestBookmaker: 'neds',
-              },
-              {
-                number: 3,
-                name: 'Speed Demon',
-                odds: { sportsbet: 7.5, ladbrokes: 7.0, neds: 7.2 },
-                bestOdds: 7.5,
-                bestBookmaker: 'sportsbet',
-              },
-            ],
-          },
-        ];
+        // Fetch from API route
+        const response = await fetch('/api/racing');
 
-        setRaces(mockRaces);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        setRaces(data);
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load racing data');
@@ -79,6 +51,10 @@ export default function HorseRacingPage() {
     }
 
     loadRacingData();
+
+    // Refresh every 60 seconds
+    const interval = setInterval(loadRacingData, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   const filteredRaces = selectedVenue
