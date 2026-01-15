@@ -115,7 +115,7 @@ export async function GET() {
         });
 
         // Sort runners by consensus score
-        runners.sort((a, b) => (b.consensusScore || 0) - (a.consensusScore || 0));
+        runners.sort((a: any, b: any) => (b.consensusScore || 0) - (a.consensusScore || 0));
 
         return {
           id: race.id,
