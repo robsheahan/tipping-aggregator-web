@@ -141,7 +141,7 @@ export default function HorseRacingPage() {
       {loading ? (
         <div className="text-center py-12">
           <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-600">Loading today's races...</p>
+          <p className="text-slate-600">Loading today&apos;s races...</p>
         </div>
       ) : filteredRaces.length === 0 ? (
         <div className="bg-white rounded-xl border-2 border-slate-200 p-12 text-center">
