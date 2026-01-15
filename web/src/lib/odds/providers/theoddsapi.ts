@@ -56,9 +56,7 @@ const SPORT_KEYS: { [sport: string]: { [league: string]: string } } = {
   boxing: {
     BOXING: 'boxing_boxing',
   },
-  tennis: {
-    TENNIS: 'tennis_atp',
-  },
+  // tennis: tennis_atp not available in AU region
   cricket: {
     CRICKET: 'cricket_test_match',
   },

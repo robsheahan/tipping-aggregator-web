@@ -44,7 +44,7 @@ const ALL_SPORTS = [
   // Other Popular Sports
   { code: 'UFC', name: 'UFC/MMA', icon: '🥊', sport: 'mma', key: 'mma_mixed_martial_arts', marketType: '2way' as const },
   { code: 'BOXING', name: 'Boxing', icon: '🥊', sport: 'boxing', key: 'boxing_boxing', marketType: '2way' as const },
-  { code: 'TENNIS', name: 'Tennis', icon: '🎾', sport: 'tennis', key: 'tennis_atp', marketType: '2way' as const },
+  // Tennis removed - tennis_atp not available in AU region
   { code: 'CRICKET', name: 'Cricket', icon: '🏏', sport: 'cricket', key: 'cricket_test_match', marketType: '2way' as const },
 ];
 
