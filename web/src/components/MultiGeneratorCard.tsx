@@ -6,7 +6,7 @@
  * Features: Sport filtering, Custom bookmaker selection
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { MultiResponse, GeneratedMulti, MultiOutcome } from '@/lib/multi/types';
 import { generateAllMultis, selectBestBookmakerForMulti, generateMulti } from '@/lib/multi/generator';
 import MultiLegRow from './MultiLegRow';
@@ -69,6 +69,10 @@ export default function MultiGeneratorCard() {
   const [showSportFilter, setShowSportFilter] = useState(false);
   const [showBookmakerSelector, setShowBookmakerSelector] = useState(false);
 
+  // Refs for click-outside detection
+  const sportFilterRef = useRef<HTMLDivElement>(null);
+  const bookmakerSelectorRef = useRef<HTMLDivElement>(null);
+
   // Fetch multi data from API
   const fetchMultiData = async () => {
     try {
@@ -102,48 +106,29 @@ export default function MultiGeneratorCard() {
     }
   };
 
-  // Regenerate multis based on sport filter and bookmaker selection
-  const regenerateMultis = () => {
-    if (allOutcomes.length === 0) return;
+  // Create empty multi
+  const createEmptyMulti = useCallback((type: MultiType, size: number): GeneratedMulti => ({
+    type,
+    size,
+    legs: [],
+    bookmaker: 'None',
+    totalOdds: 0,
+    successProbability: 0,
+    potentialPayout: 0,
+    lastUpdated: new Date().toISOString(),
+    warning: 'No matches available for selected sports',
+  }), []);
 
-    // Filter outcomes by selected sports
-    const filteredOutcomes = allOutcomes.filter(outcome =>
-      selectedSports.includes(outcome.sport)
+  // Helper to find match ID from leg
+  const findMatchId = useCallback((leg: any): string => {
+    const outcome = allOutcomes.find(
+      o => o.homeTeam === leg.homeTeam && o.awayTeam === leg.awayTeam
     );
-
-    if (filteredOutcomes.length === 0) {
-      // No outcomes available for selected sports
-      setData({
-        triple: createEmptyMulti('triple', 3),
-        nickel: createEmptyMulti('nickel', 5),
-        dime: createEmptyMulti('dime', 10),
-        score: createEmptyMulti('score', 20),
-        totalOutcomesAvailable: 0,
-        lastUpdated: new Date().toISOString(),
-      });
-      return;
-    }
-
-    // Generate multis with filtered outcomes
-    let newMultis = generateAllMultis(filteredOutcomes);
-
-    // If a specific bookmaker is selected, recalculate odds for that bookmaker
-    if (selectedBookmaker) {
-      newMultis = {
-        triple: recalculateMultiForBookmaker(newMultis.triple, selectedBookmaker),
-        nickel: recalculateMultiForBookmaker(newMultis.nickel, selectedBookmaker),
-        dime: recalculateMultiForBookmaker(newMultis.dime, selectedBookmaker),
-        score: recalculateMultiForBookmaker(newMultis.score, selectedBookmaker),
-        totalOutcomesAvailable: filteredOutcomes.length,
-        lastUpdated: new Date().toISOString(),
-      };
-    }
-
-    setData(newMultis);
-  };
+    return outcome?.matchId || '';
+  }, [allOutcomes]);
 
   // Recalculate multi for a specific bookmaker
-  const recalculateMultiForBookmaker = (multi: GeneratedMulti, bookmaker: string): GeneratedMulti => {
+  const recalculateMultiForBookmaker = useCallback((multi: GeneratedMulti, bookmaker: string): GeneratedMulti => {
     if (multi.legs.length === 0) return multi;
 
     let totalOdds = 1.0;
@@ -186,28 +171,47 @@ export default function MultiGeneratorCard() {
       lastUpdated: new Date().toISOString(),
       warning: undefined,
     };
-  };
+  }, [allOutcomes, findMatchId]);
 
-  // Helper to find match ID from leg
-  const findMatchId = (leg: any): string => {
-    const outcome = allOutcomes.find(
-      o => o.homeTeam === leg.homeTeam && o.awayTeam === leg.awayTeam
+  // Regenerate multis based on sport filter and bookmaker selection
+  const regenerateMultis = useCallback(() => {
+    if (allOutcomes.length === 0) return;
+
+    // Filter outcomes by selected sports
+    const filteredOutcomes = allOutcomes.filter(outcome =>
+      selectedSports.includes(outcome.sport)
     );
-    return outcome?.matchId || '';
-  };
 
-  // Create empty multi
-  const createEmptyMulti = (type: MultiType, size: number): GeneratedMulti => ({
-    type,
-    size,
-    legs: [],
-    bookmaker: 'None',
-    totalOdds: 0,
-    successProbability: 0,
-    potentialPayout: 0,
-    lastUpdated: new Date().toISOString(),
-    warning: 'No matches available for selected sports',
-  });
+    if (filteredOutcomes.length === 0) {
+      // No outcomes available for selected sports
+      setData({
+        triple: createEmptyMulti('triple', 3),
+        nickel: createEmptyMulti('nickel', 5),
+        dime: createEmptyMulti('dime', 10),
+        score: createEmptyMulti('score', 20),
+        totalOutcomesAvailable: 0,
+        lastUpdated: new Date().toISOString(),
+      });
+      return;
+    }
+
+    // Generate multis with filtered outcomes
+    let newMultis = generateAllMultis(filteredOutcomes);
+
+    // If a specific bookmaker is selected, recalculate odds for that bookmaker
+    if (selectedBookmaker) {
+      newMultis = {
+        triple: recalculateMultiForBookmaker(newMultis.triple, selectedBookmaker),
+        nickel: recalculateMultiForBookmaker(newMultis.nickel, selectedBookmaker),
+        dime: recalculateMultiForBookmaker(newMultis.dime, selectedBookmaker),
+        score: recalculateMultiForBookmaker(newMultis.score, selectedBookmaker),
+        totalOutcomesAvailable: filteredOutcomes.length,
+        lastUpdated: new Date().toISOString(),
+      };
+    }
+
+    setData(newMultis);
+  }, [allOutcomes, selectedSports, selectedBookmaker, createEmptyMulti, recalculateMultiForBookmaker]);
 
   // Get all available bookmakers from current multi
   const getAvailableBookmakers = (): string[] => {
@@ -246,7 +250,7 @@ export default function MultiGeneratorCard() {
     if (allOutcomes.length > 0) {
       regenerateMultis();
     }
-  }, [selectedSports, selectedBookmaker]);
+  }, [allOutcomes, selectedSports, selectedBookmaker, regenerateMultis]);
 
   // Update seconds counter
   useEffect(() => {
@@ -259,6 +263,28 @@ export default function MultiGeneratorCard() {
 
     return () => clearInterval(interval);
   }, [lastUpdated]);
+
+  // Click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Close sport filter dropdown
+      if (sportFilterRef.current && !sportFilterRef.current.contains(event.target as Node)) {
+        setShowSportFilter(false);
+      }
+      // Close bookmaker selector dropdown
+      if (bookmakerSelectorRef.current && !bookmakerSelectorRef.current.contains(event.target as Node)) {
+        setShowBookmakerSelector(false);
+      }
+    };
+
+    // Add event listener
+    document.addEventListener('mousedown', handleClickOutside);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Get current multi based on selected tab
   const currentMulti: GeneratedMulti | undefined = data?.[selectedTab];
@@ -349,7 +375,7 @@ export default function MultiGeneratorCard() {
         </div>
 
         {/* Sport Filter Dropdown */}
-        <div className="relative">
+        <div className="relative" ref={sportFilterRef}>
           <button
             onClick={() => setShowSportFilter(!showSportFilter)}
             className="px-4 py-3 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium text-slate-700"
@@ -462,7 +488,7 @@ export default function MultiGeneratorCard() {
             <div className="mt-6 pt-6 border-t border-slate-200">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 {/* Bookmaker Selector */}
-                <div className="relative">
+                <div className="relative" ref={bookmakerSelectorRef}>
                   <div className="text-xs text-slate-500 mb-1">Bookmaker</div>
                   <button
                     onClick={() => setShowBookmakerSelector(!showBookmakerSelector)}
