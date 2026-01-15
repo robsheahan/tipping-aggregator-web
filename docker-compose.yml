@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Next.js Frontend
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - THEODDSAPI_KEY=${THEODDSAPI_KEY}
+      - RACINGAPI_USERNAME=${RACINGAPI_USERNAME}
+      - RACINGAPI_PASSWORD=${RACINGAPI_PASSWORD}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+    depends_on:
+      - api
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - tipping-network
+
+  # Python FastAPI Backend
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - RACINGAPI_USERNAME=${RACINGAPI_USERNAME}
+      - RACINGAPI_PASSWORD=${RACINGAPI_PASSWORD}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - ./backend:/app
+    networks:
+      - tipping-network
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Worker for automated data aggregation
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - RACINGAPI_USERNAME=${RACINGAPI_USERNAME}
+      - RACINGAPI_PASSWORD=${RACINGAPI_PASSWORD}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - ./backend:/app
+      - ./backend/playwright-cache:/ms-playwright
+    networks:
+      - tipping-network
+    command: python workers/aggregator.py
+    restart: unless-stopped
+
+  # Redis for caching and job queue
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - tipping-network
+
+networks:
+  tipping-network:
+    driver: bridge
+
+volumes:
+  redis-data:

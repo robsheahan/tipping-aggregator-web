@@ -1,6 +1,7 @@
 # Environment variables
 .env
 .env.local
+.env.*.local
 
 # Python
 __pycache__/
@@ -12,11 +13,21 @@ venv/
 env/
 ENV/
 .venv
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Database
-*.db
-*.sqlite3
-postgres_data/
+# Logs
+*.log
+logs/
+backend/logs/
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+build/
+.cache/
 
 # IDE
 .vscode/
@@ -24,26 +35,27 @@ postgres_data/
 *.swp
 *.swo
 *~
-
-# Next.js
-web/.next/
-web/out/
-web/node_modules/
-web/build/
-web/dist/
-
-# Logs
-*.log
-logs/
-
-# OS
 .DS_Store
-Thumbs.db
 
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
+.tox/
 
-# Alembic
-api/migrations/versions/*.pyc
+# Docker
+*.tar.gz
+docker-compose.override.yml
+
+# Playwright
+playwright-cache/
+test-results/
+playwright-report/
+
+# Database
+*.db
+*.sqlite
+
+# Misc
+.vercel
+*.pem
