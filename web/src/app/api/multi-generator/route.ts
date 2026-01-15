@@ -1,6 +1,7 @@
 /**
  * API Route: /api/multi-generator
  * Generates Triple/Nickel/Dime/Score multis across ALL sports
+ * Returns both generated multis AND all raw outcomes for client-side filtering
  */
 
 import { NextResponse } from 'next/server';
@@ -15,14 +16,20 @@ export async function GET() {
     console.log(`Found ${outcomes.length} total outcomes across all sports`);
 
     // Generate all 4 multi types
-    const response = generateAllMultis(outcomes);
+    const multis = generateAllMultis(outcomes);
 
     console.log('Multi generation complete:', {
-      triple: `${response.triple.legs.length} legs`,
-      nickel: `${response.nickel.legs.length} legs`,
-      dime: `${response.dime.legs.length} legs`,
-      score: `${response.score.legs.length} legs`,
+      triple: `${multis.triple.legs.length} legs`,
+      nickel: `${multis.nickel.legs.length} legs`,
+      dime: `${multis.dime.legs.length} legs`,
+      score: `${multis.score.legs.length} legs`,
     });
+
+    // Return both multis and raw outcomes for client-side filtering
+    const response = {
+      ...multis,
+      allOutcomes: outcomes, // Include all outcomes for client-side regeneration
+    };
 
     return NextResponse.json(response, {
       headers: {
