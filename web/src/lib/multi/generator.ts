@@ -5,7 +5,11 @@
 
 import { MultiOutcome, MultiLeg, GeneratedMulti, MultiResponse } from './types';
 import { getTheOddsAPIClient } from '../odds/providers/theoddsapi';
-import { normalizeOdds2Way, normalizeOdds3Way } from '../odds/conversion';
+import {
+  normalizeOdds2Way,
+  normalizeOdds3Way,
+  decimalOddsToImpliedProbability
+} from '../odds/conversion';
 
 /**
  * All available sports from The Odds API
@@ -97,12 +101,17 @@ export async function getAllUpcomingOutcomes(): Promise<MultiOutcome[]> {
           ? bookmakerOdds.reduce((sum, b) => sum + (b.draw || 0), 0) / bookmakerOdds.length
           : undefined;
 
-        // Calculate true probabilities (remove bookmaker margin)
+        // Convert decimal odds to implied probabilities
+        const homeImpliedProb = decimalOddsToImpliedProbability(avgHomeOdds);
+        const awayImpliedProb = decimalOddsToImpliedProbability(avgAwayOdds);
+        const drawImpliedProb = avgDrawOdds ? decimalOddsToImpliedProbability(avgDrawOdds) : undefined;
+
+        // Calculate true probabilities (remove bookmaker margin by normalizing)
         let homeProb, awayProb, drawProb;
-        if (is3Way && avgDrawOdds) {
-          [homeProb, drawProb, awayProb] = normalizeOdds3Way(avgHomeOdds, avgDrawOdds, avgAwayOdds);
+        if (is3Way && drawImpliedProb !== undefined) {
+          [homeProb, drawProb, awayProb] = normalizeOdds3Way(homeImpliedProb, drawImpliedProb, awayImpliedProb);
         } else {
-          [homeProb, awayProb] = normalizeOdds2Way(avgHomeOdds, avgAwayOdds);
+          [homeProb, awayProb] = normalizeOdds2Way(homeImpliedProb, awayImpliedProb);
         }
 
         // Create bookmaker odds map for each outcome
