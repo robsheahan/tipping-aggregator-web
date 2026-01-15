@@ -126,3 +126,55 @@ export function calculateOverround(probabilities: OddsData): number {
   const total = probabilities.home + probabilities.away + (probabilities.draw || 0);
   return (total - 1.0) * 100.0;
 }
+
+/**
+ * Power Method for margin removal (more accurate for favorites)
+ * Solves for k in: sum((1/odds_i)^k) = 1
+ * Then calculates true probability: TP_i = (1/odds_i)^k
+ *
+ * @param odds Array of decimal odds for all outcomes
+ * @returns Array of true probabilities using Power Method
+ */
+export function powerMethodNormalization(odds: number[]): number[] {
+  // Convert odds to implied probabilities
+  const impliedProbs = odds.map(o => 1.0 / o);
+
+  // Binary search to find k such that sum((p_i)^k) = 1
+  let kLow = 0.1;
+  let kHigh = 10.0;
+  let k = 1.0;
+  const tolerance = 0.0001;
+  const maxIterations = 100;
+
+  for (let i = 0; i < maxIterations; i++) {
+    k = (kLow + kHigh) / 2.0;
+
+    // Calculate sum of p^k
+    const sum = impliedProbs.reduce((acc, p) => acc + Math.pow(p, k), 0);
+
+    if (Math.abs(sum - 1.0) < tolerance) {
+      break; // Found k
+    }
+
+    if (sum > 1.0) {
+      kLow = k; // k too low, increase
+    } else {
+      kHigh = k; // k too high, decrease
+    }
+  }
+
+  // Calculate true probabilities using found k
+  return impliedProbs.map(p => Math.pow(p, k));
+}
+
+/**
+ * Calculate Edge for a selection
+ * Edge = (True Probability × Best Market Odds) - 1
+ *
+ * @param trueProbability True probability after margin removal
+ * @param bestOdds Best available odds in market
+ * @returns Edge as decimal (e.g., 0.042 for 4.2% edge)
+ */
+export function calculateEdge(trueProbability: number, bestOdds: number): number {
+  return (trueProbability * bestOdds) - 1.0;
+}

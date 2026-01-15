@@ -11,7 +11,8 @@ export interface MultiOutcome {
   awayTeam: string;
   selection: string;          // Team name or 'Draw'
   selectionType: 'home' | 'away' | 'draw';
-  trueProbability: number;    // 0-1, normalized
+  trueProbability: number;    // 0-1, normalized using Power Method
+  edge: number;               // Edge = (TP × Best Odds) - 1
   bookmakerOdds: Record<string, number>; // { 'Sportsbet': 2.5, 'TAB': 2.45, ... }
   commenceTime: string;       // ISO timestamp
 }
@@ -24,6 +25,7 @@ export interface MultiLeg {
   awayTeam: string;
   selection: string;
   trueProbability: number;
+  edge: number;               // Edge percentage for this selection
   odds: number;               // Decimal odds from selected bookmaker
   commenceTime: string;
 }

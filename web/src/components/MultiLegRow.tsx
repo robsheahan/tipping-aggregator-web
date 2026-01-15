@@ -75,6 +75,16 @@ export default function MultiLegRow({ leg, index }: MultiLegRowProps) {
         <div>
           <div className="text-xs text-slate-500 mb-0.5">Selection</div>
           <div className="text-indigo-900 font-semibold">{leg.selection}</div>
+          {/* Edge Badge */}
+          <div className="mt-1">
+            <span className={`inline-block text-xs font-semibold px-2 py-0.5 rounded ${
+              leg.edge > 0
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-slate-100 text-slate-600'
+            }`}>
+              {leg.edge > 0 ? '+' : ''}{(leg.edge * 100).toFixed(1)}% Value
+            </span>
+          </div>
         </div>
 
         {/* Probability & Odds */}

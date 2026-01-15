@@ -6,9 +6,8 @@
 import { MultiOutcome, MultiLeg, GeneratedMulti, MultiResponse } from './types';
 import { getTheOddsAPIClient } from '../odds/providers/theoddsapi';
 import {
-  normalizeOdds2Way,
-  normalizeOdds3Way,
-  decimalOddsToImpliedProbability
+  powerMethodNormalization,
+  calculateEdge,
 } from '../odds/conversion';
 
 /**
@@ -101,18 +100,31 @@ export async function getAllUpcomingOutcomes(): Promise<MultiOutcome[]> {
           ? bookmakerOdds.reduce((sum, b) => sum + (b.draw || 0), 0) / bookmakerOdds.length
           : undefined;
 
-        // Convert decimal odds to implied probabilities
-        const homeImpliedProb = decimalOddsToImpliedProbability(avgHomeOdds);
-        const awayImpliedProb = decimalOddsToImpliedProbability(avgAwayOdds);
-        const drawImpliedProb = avgDrawOdds ? decimalOddsToImpliedProbability(avgDrawOdds) : undefined;
-
-        // Calculate true probabilities (remove bookmaker margin by normalizing)
+        // Use Power Method for margin removal (more accurate for favorites)
         let homeProb, awayProb, drawProb;
-        if (is3Way && drawImpliedProb !== undefined) {
-          [homeProb, drawProb, awayProb] = normalizeOdds3Way(homeImpliedProb, drawImpliedProb, awayImpliedProb);
+        if (is3Way && avgDrawOdds) {
+          // 3-way market: home, draw, away
+          const allOdds = [avgHomeOdds, avgDrawOdds, avgAwayOdds];
+          const trueProbabilities = powerMethodNormalization(allOdds);
+          [homeProb, drawProb, awayProb] = trueProbabilities;
         } else {
-          [homeProb, awayProb] = normalizeOdds2Way(homeImpliedProb, awayImpliedProb);
+          // 2-way market: home, away
+          const allOdds = [avgHomeOdds, avgAwayOdds];
+          const trueProbabilities = powerMethodNormalization(allOdds);
+          [homeProb, awayProb] = trueProbabilities;
         }
+
+        // Get best odds across all bookmakers for edge calculation
+        const bestHomeOdds = Math.max(...bookmakerOdds.map(b => b.home));
+        const bestAwayOdds = Math.max(...bookmakerOdds.map(b => b.away));
+        const bestDrawOdds = hasDrawOdds && is3Way
+          ? Math.max(...bookmakerOdds.filter(b => b.draw).map(b => b.draw!))
+          : undefined;
+
+        // Calculate Edge for each outcome
+        const homeEdge = calculateEdge(homeProb, bestHomeOdds);
+        const awayEdge = calculateEdge(awayProb, bestAwayOdds);
+        const drawEdge = drawProb && bestDrawOdds ? calculateEdge(drawProb, bestDrawOdds) : undefined;
 
         // Create bookmaker odds map for each outcome
         const homeBookmakerOdds: Record<string, number> = {};
@@ -127,7 +139,7 @@ export async function getAllUpcomingOutcomes(): Promise<MultiOutcome[]> {
           }
         }
 
-        // Create outcome objects
+        // Create outcome objects with Edge values
         allOutcomes.push({
           sport: sport.code,
           sportName: sport.name,
@@ -138,6 +150,7 @@ export async function getAllUpcomingOutcomes(): Promise<MultiOutcome[]> {
           selection: event.home_team,
           selectionType: 'home',
           trueProbability: homeProb,
+          edge: homeEdge,
           bookmakerOdds: homeBookmakerOdds,
           commenceTime: event.commence_time,
         });
@@ -152,12 +165,13 @@ export async function getAllUpcomingOutcomes(): Promise<MultiOutcome[]> {
           selection: event.away_team,
           selectionType: 'away',
           trueProbability: awayProb,
+          edge: awayEdge,
           bookmakerOdds: awayBookmakerOdds,
           commenceTime: event.commence_time,
         });
 
         // Add draw outcome if applicable
-        if (drawProb && Object.keys(drawBookmakerOdds).length > 0) {
+        if (drawProb && drawEdge !== undefined && Object.keys(drawBookmakerOdds).length > 0) {
           allOutcomes.push({
             sport: sport.code,
             sportName: sport.name,
@@ -168,6 +182,7 @@ export async function getAllUpcomingOutcomes(): Promise<MultiOutcome[]> {
             selection: 'Draw',
             selectionType: 'draw',
             trueProbability: drawProb,
+            edge: drawEdge,
             bookmakerOdds: drawBookmakerOdds,
             commenceTime: event.commence_time,
           });
@@ -178,10 +193,15 @@ export async function getAllUpcomingOutcomes(): Promise<MultiOutcome[]> {
     }
   }
 
-  // Sort by true probability descending
-  allOutcomes.sort((a, b) => b.trueProbability - a.trueProbability);
+  // FILTER: Only outcomes with True Probability > 65%
+  const filteredOutcomes = allOutcomes.filter(outcome => outcome.trueProbability > 0.65);
 
-  return allOutcomes;
+  // SORT: By Edge (highest to lowest) - prioritize value, not just probability
+  filteredOutcomes.sort((a, b) => b.edge - a.edge);
+
+  console.log(`Filtered to ${filteredOutcomes.length} high-probability outcomes (TP > 65%), sorted by Edge`);
+
+  return filteredOutcomes;
 }
 
 /**
@@ -297,7 +317,7 @@ export function generateMulti(
 
   const { bookmaker, totalOdds } = bookmakerResult;
 
-  // Build legs
+  // Build legs with Edge values
   const legs: MultiLeg[] = selectedOutcomes.map((outcome) => ({
     sport: outcome.sport,
     sportName: outcome.sportName,
@@ -306,6 +326,7 @@ export function generateMulti(
     awayTeam: outcome.awayTeam,
     selection: outcome.selection,
     trueProbability: outcome.trueProbability,
+    edge: outcome.edge,
     odds: outcome.bookmakerOdds[bookmaker] || 0,
     commenceTime: outcome.commenceTime,
   }));

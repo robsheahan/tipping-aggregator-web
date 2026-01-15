@@ -144,6 +144,7 @@ export default function MultiGeneratorCard() {
       return {
         ...leg,
         odds,
+        edge: outcome.edge, // Preserve edge value
       };
     });
 
