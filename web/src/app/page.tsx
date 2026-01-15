@@ -26,6 +26,23 @@ export default function Home() {
         const sportsWithCounts = await Promise.all(
           leagues.map(async (league) => {
             try {
+              // Racing uses a different API endpoint
+              if (league.code === 'RACING') {
+                const response = await fetch('/api/racing');
+                if (response.ok) {
+                  const races = await response.json();
+                  return {
+                    ...league,
+                    matchCount: races.length,
+                  };
+                }
+                return {
+                  ...league,
+                  matchCount: 0,
+                };
+              }
+
+              // Other sports use the matches endpoint
               const matches = await getMatches({
                 league: league.code,
                 upcoming_only: true,
