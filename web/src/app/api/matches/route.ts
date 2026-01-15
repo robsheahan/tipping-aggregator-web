@@ -27,6 +27,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Racing events should use the /api/racing endpoint
+  if (sportConfig.marketType === 'racing') {
+    return NextResponse.json(
+      { error: 'Racing events should use /api/racing endpoint' },
+      { status: 400 }
+    );
+  }
+
   const sport = sportConfig.theoddsapiSport;
 
   try {
@@ -86,7 +94,8 @@ export async function GET(request: NextRequest) {
           }
 
           // Convert to provider odds format
-          const marketType = sportConfig.marketType;
+          // At this point marketType is guaranteed to be '2way' or '3way' (racing filtered above)
+          const marketType = sportConfig.marketType as '2way' | '3way';
           const providerOdds = client.convertToProviderOdds(
             bookmakerOdds,
             marketType
