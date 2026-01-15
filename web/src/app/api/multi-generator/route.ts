@@ -1,23 +1,18 @@
 /**
  * API Route: /api/multi-generator
- * Generates Triple/Nickel/Dime/Score multis across all sports
+ * Generates Triple/Nickel/Dime/Score multis across ALL sports
  */
 
 import { NextResponse } from 'next/server';
-import { getAllSports } from '@/lib/config/sports';
 import { getAllUpcomingOutcomes, generateAllMultis } from '@/lib/multi/generator';
 
 export async function GET() {
   try {
-    console.log('Generating Master Multis...');
+    console.log('Generating Master Multis from ALL sports...');
 
-    // Get all non-racing sports
-    const sports = getAllSports();
-    console.log(`Fetching outcomes from ${sports.length} sports...`);
-
-    // Fetch all upcoming outcomes
-    const outcomes = await getAllUpcomingOutcomes(sports);
-    console.log(`Found ${outcomes.length} total outcomes`);
+    // Fetch all upcoming outcomes from ALL sports (within next 7 days)
+    const outcomes = await getAllUpcomingOutcomes();
+    console.log(`Found ${outcomes.length} total outcomes across all sports`);
 
     // Generate all 4 multi types
     const response = generateAllMultis(outcomes);

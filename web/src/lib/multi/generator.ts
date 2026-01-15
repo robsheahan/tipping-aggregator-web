@@ -1,25 +1,66 @@
 /**
  * Master Multi Generator - Core Logic
- * Generates Triple/Nickel/Dime/Score multis from all sports
+ * Generates Triple/Nickel/Dime/Score multis from ALL sports
  */
 
 import { MultiOutcome, MultiLeg, GeneratedMulti, MultiResponse } from './types';
-import { SportConfig } from '../config/sports';
 import { getTheOddsAPIClient } from '../odds/providers/theoddsapi';
 import { normalizeOdds2Way, normalizeOdds3Way } from '../odds/conversion';
 
 /**
- * Fetches all upcoming matches across all sports and flattens to individual outcomes
+ * All available sports from The Odds API
+ * This includes many more than what's configured on the site
  */
-export async function getAllUpcomingOutcomes(sports: SportConfig[]): Promise<MultiOutcome[]> {
+const ALL_SPORTS = [
+  // Soccer
+  { code: 'EPL', name: 'English Premier League', icon: '⚽', sport: 'soccer', key: 'soccer_epl', marketType: '3way' as const },
+  { code: 'LA_LIGA', name: 'La Liga', icon: '⚽', sport: 'soccer', key: 'soccer_spain_la_liga', marketType: '3way' as const },
+  { code: 'BUNDESLIGA', name: 'Bundesliga', icon: '⚽', sport: 'soccer', key: 'soccer_germany_bundesliga', marketType: '3way' as const },
+  { code: 'SERIE_A', name: 'Serie A', icon: '⚽', sport: 'soccer', key: 'soccer_italy_serie_a', marketType: '3way' as const },
+  { code: 'LIGUE_1', name: 'Ligue 1', icon: '⚽', sport: 'soccer', key: 'soccer_france_ligue_one', marketType: '3way' as const },
+  { code: 'UEFA_CHAMPIONS', name: 'UEFA Champions League', icon: '⚽', sport: 'soccer', key: 'soccer_uefa_champs_league', marketType: '3way' as const },
+  { code: 'UEFA_EUROPA', name: 'UEFA Europa League', icon: '⚽', sport: 'soccer', key: 'soccer_uefa_europa_league', marketType: '3way' as const },
+
+  // Australian Sports
+  { code: 'AFL', name: 'Australian Football League', icon: '🏉', sport: 'afl', key: 'aussierules_afl', marketType: '2way' as const },
+  { code: 'NRL', name: 'National Rugby League', icon: '🏉', sport: 'nrl', key: 'rugbyleague_nrl', marketType: '2way' as const },
+
+  // American Sports
+  { code: 'NFL', name: 'NFL', icon: '🏈', sport: 'americanfootball', key: 'americanfootball_nfl', marketType: '2way' as const },
+  { code: 'NBA', name: 'NBA', icon: '🏀', sport: 'basketball', key: 'basketball_nba', marketType: '2way' as const },
+  { code: 'MLB', name: 'MLB', icon: '⚾', sport: 'baseball', key: 'baseball_mlb', marketType: '2way' as const },
+  { code: 'NHL', name: 'NHL', icon: '🏒', sport: 'icehockey', key: 'icehockey_nhl', marketType: '2way' as const },
+  { code: 'NCAAF', name: 'NCAA Football', icon: '🏈', sport: 'americanfootball', key: 'americanfootball_ncaaf', marketType: '2way' as const },
+  { code: 'NCAAB', name: 'NCAA Basketball', icon: '🏀', sport: 'basketball', key: 'basketball_ncaab', marketType: '2way' as const },
+
+  // Rugby
+  { code: 'RUGBY_UNION', name: 'Rugby Union', icon: '🏉', sport: 'rugbyunion', key: 'rugbyunion_super_rugby', marketType: '2way' as const },
+  { code: 'RUGBY_LEAGUE', name: 'Rugby League', icon: '🏉', sport: 'rugbyleague', key: 'rugbyleague_nrl', marketType: '2way' as const },
+
+  // Other Popular Sports
+  { code: 'UFC', name: 'UFC/MMA', icon: '🥊', sport: 'mma', key: 'mma_mixed_martial_arts', marketType: '2way' as const },
+  { code: 'BOXING', name: 'Boxing', icon: '🥊', sport: 'boxing', key: 'boxing_boxing', marketType: '2way' as const },
+  { code: 'TENNIS', name: 'Tennis', icon: '🎾', sport: 'tennis', key: 'tennis_atp', marketType: '2way' as const },
+  { code: 'CRICKET', name: 'Cricket', icon: '🏏', sport: 'cricket', key: 'cricket_test_match', marketType: '2way' as const },
+];
+
+/**
+ * Fetches all upcoming matches across ALL sports and flattens to individual outcomes
+ * Only includes matches within the next 7 days
+ */
+export async function getAllUpcomingOutcomes(): Promise<MultiOutcome[]> {
   const client = getTheOddsAPIClient();
   const allOutcomes: MultiOutcome[] = [];
 
+  // Calculate cutoff date (7 days from now)
+  const now = new Date();
+  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
   // Fetch matches for all sports in parallel
   const matchesBySport = await Promise.all(
-    sports.map(async (sport) => {
+    ALL_SPORTS.map(async (sport) => {
       try {
-        const events = await client.fetchMatches(sport.theoddsapiSport, sport.code);
+        const events = await client.fetchMatches(sport.sport, sport.code);
         return { sport, events };
       } catch (error) {
         console.error(`Error fetching ${sport.code} matches:`, error);
@@ -32,6 +73,12 @@ export async function getAllUpcomingOutcomes(sports: SportConfig[]): Promise<Mul
   for (const { sport, events } of matchesBySport) {
     for (const event of events) {
       try {
+        // Filter: Only matches within next 7 days
+        const matchDate = new Date(event.commence_time);
+        if (matchDate < now || matchDate > sevenDaysFromNow) {
+          continue; // Skip matches outside 7-day window
+        }
+
         // Extract bookmaker odds
         const bookmakerOdds = client.extractBookmakerOdds(event);
 
