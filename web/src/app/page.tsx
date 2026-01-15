@@ -45,7 +45,25 @@ export default function Home() {
           })
         );
 
-        setSports(sportsWithCounts);
+        // Reorder sports: NRL, AFL, EPL first, then rest
+        const sportOrder = ['NRL', 'AFL', 'EPL'];
+        const orderedSports = sportsWithCounts.sort((a, b) => {
+          const aIndex = sportOrder.indexOf(a.code);
+          const bIndex = sportOrder.indexOf(b.code);
+
+          // If both are in the priority list, sort by their index
+          if (aIndex !== -1 && bIndex !== -1) {
+            return aIndex - bIndex;
+          }
+          // If only a is in the list, it comes first
+          if (aIndex !== -1) return -1;
+          // If only b is in the list, it comes first
+          if (bIndex !== -1) return 1;
+          // Otherwise maintain original order
+          return 0;
+        });
+
+        setSports(orderedSports);
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load sports');
@@ -58,8 +76,6 @@ export default function Home() {
 
   return (
     <div>
-      {/* Master Multi Generator - Focus of the site */}
-      <MultiGeneratorCard />
       {/* Hero Section */}
       <div className="text-center mb-12 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-sm font-medium mb-6 ring-1 ring-inset ring-indigo-700/10">
@@ -80,6 +96,9 @@ export default function Home() {
           Aggregate probabilities from multiple bookmakers to make informed tipping decisions across all major sports.
         </p>
       </div>
+
+      {/* Master Multi Generator */}
+      <MultiGeneratorCard />
 
       {/* Error State */}
       {error && (
