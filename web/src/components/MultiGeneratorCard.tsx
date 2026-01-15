@@ -447,19 +447,19 @@ export default function MultiGeneratorCard() {
             </div>
           )}
 
-          {/* Multi Success Score */}
+          {/* Total Payout & Multi Success Score */}
           <div className="mb-6 p-6 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl">
             <div className="text-center">
-              <div className="text-sm text-indigo-700 font-semibold mb-2">Multi Success Score</div>
+              <div className="text-sm text-indigo-700 font-semibold mb-2">Total Payout</div>
               <div className="text-5xl md:text-6xl font-bold text-indigo-900">
-                {(currentMulti.successProbability * 100).toFixed(1)}%
+                ${currentMulti.potentialPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
+              <div className="text-xs text-indigo-600 mt-1">on $1 bet</div>
               <div className="mt-4 pt-4 border-t border-indigo-200">
-                <div className="text-xs text-indigo-700 font-semibold mb-1">Total Payout</div>
+                <div className="text-xs text-indigo-700 font-semibold mb-1">Multi Success Score</div>
                 <div className="text-2xl md:text-3xl font-bold text-indigo-900">
-                  ${currentMulti.potentialPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  {(currentMulti.successProbability * 100).toFixed(1)}%
                 </div>
-                <div className="text-xs text-indigo-600 mt-1">on $1 bet</div>
               </div>
             </div>
           </div>
