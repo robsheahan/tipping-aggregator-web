@@ -63,6 +63,17 @@ export default function HorseRacingPage() {
 
   const venues = Array.from(new Set(races.map(r => r.venue)));
 
+  // Get all unique bookmakers from all races
+  const allBookmakers = new Set<string>();
+  races.forEach(race => {
+    race.runners.forEach(runner => {
+      Object.keys(runner.odds).forEach(bookmaker => {
+        allBookmakers.add(bookmaker);
+      });
+    });
+  });
+  const bookmakers = Array.from(allBookmakers).sort();
+
   return (
     <div>
       {/* Header */}
@@ -183,9 +194,11 @@ export default function HorseRacingPage() {
                     <tr>
                       <th className="text-left px-6 py-3 text-sm font-semibold text-slate-700">#</th>
                       <th className="text-left px-6 py-3 text-sm font-semibold text-slate-700">Runner</th>
-                      <th className="text-center px-4 py-3 text-sm font-semibold text-slate-700">Sportsbet</th>
-                      <th className="text-center px-4 py-3 text-sm font-semibold text-slate-700">Ladbrokes</th>
-                      <th className="text-center px-4 py-3 text-sm font-semibold text-slate-700">Neds</th>
+                      {bookmakers.map(bookmaker => (
+                        <th key={bookmaker} className="text-center px-4 py-3 text-sm font-semibold text-slate-700 capitalize">
+                          {bookmaker}
+                        </th>
+                      ))}
                       <th className="text-center px-4 py-3 text-sm font-semibold text-slate-700 bg-emerald-50">Best</th>
                     </tr>
                   </thead>
@@ -196,49 +209,31 @@ export default function HorseRacingPage() {
                         <td className="px-6 py-4">
                           <div className="font-semibold text-slate-900">{runner.name}</div>
                         </td>
-                        <td className="px-4 py-4 text-center">
-                          <button
-                            className={`px-4 py-2 rounded-lg font-bold transition-all ${
-                              runner.bestBookmaker === 'sportsbet'
-                                ? 'bg-emerald-100 text-emerald-800 ring-2 ring-emerald-500'
-                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                            }`}
-                            onClick={() => {
-                              // TODO: Generate affiliate link
-                              console.log('Navigate to Sportsbet:', race.id, runner.number);
-                            }}
-                          >
-                            ${runner.odds.sportsbet.toFixed(2)}
-                          </button>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <button
-                            className={`px-4 py-2 rounded-lg font-bold transition-all ${
-                              runner.bestBookmaker === 'ladbrokes'
-                                ? 'bg-emerald-100 text-emerald-800 ring-2 ring-emerald-500'
-                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                            }`}
-                            onClick={() => {
-                              console.log('Navigate to Ladbrokes:', race.id, runner.number);
-                            }}
-                          >
-                            ${runner.odds.ladbrokes.toFixed(2)}
-                          </button>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <button
-                            className={`px-4 py-2 rounded-lg font-bold transition-all ${
-                              runner.bestBookmaker === 'neds'
-                                ? 'bg-emerald-100 text-emerald-800 ring-2 ring-emerald-500'
-                                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                            }`}
-                            onClick={() => {
-                              console.log('Navigate to Neds:', race.id, runner.number);
-                            }}
-                          >
-                            ${runner.odds.neds.toFixed(2)}
-                          </button>
-                        </td>
+                        {bookmakers.map(bookmaker => {
+                          const odds = runner.odds[bookmaker];
+                          const isBest = runner.bestBookmaker === bookmaker;
+                          return (
+                            <td key={bookmaker} className="px-4 py-4 text-center">
+                              {odds ? (
+                                <button
+                                  className={`px-4 py-2 rounded-lg font-bold transition-all ${
+                                    isBest
+                                      ? 'bg-emerald-100 text-emerald-800 ring-2 ring-emerald-500'
+                                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                  }`}
+                                  onClick={() => {
+                                    // TODO: Generate affiliate link
+                                    console.log(`Navigate to ${bookmaker}:`, race.id, runner.number);
+                                  }}
+                                >
+                                  ${odds.toFixed(2)}
+                                </button>
+                              ) : (
+                                <span className="text-slate-400 text-sm">-</span>
+                              )}
+                            </td>
+                          );
+                        })}
                         <td className="px-4 py-4 text-center bg-emerald-50">
                           <div className="text-lg font-bold text-emerald-700">
                             ${runner.bestOdds.toFixed(2)}
