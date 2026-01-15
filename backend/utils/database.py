@@ -32,6 +32,9 @@ class SupabaseClient:
         """
         try:
             data = meet.dict()
+            # Convert date to string for JSON serialization
+            if 'date' in data and hasattr(data['date'], 'isoformat'):
+                data['date'] = data['date'].isoformat()
             result = self.client.table("meets").upsert(data).execute()
             logger.debug(f"Upserted meet: {meet.id}")
             return result
@@ -48,6 +51,10 @@ class SupabaseClient:
             data = race.dict()
             # Convert runners list to JSONB
             data['runners'] = [r.dict() if hasattr(r, 'dict') else r for r in data.get('runners', [])]
+
+            # Convert datetime to ISO string for JSON serialization
+            if 'start_time' in data and hasattr(data['start_time'], 'isoformat'):
+                data['start_time'] = data['start_time'].isoformat()
 
             result = self.client.table("races").upsert(data).execute()
             logger.debug(f"Upserted race: {race.id}")

@@ -24,7 +24,7 @@ class ClaudeAnalyzer:
             raise ValueError("ANTHROPIC_API_KEY environment variable not set")
 
         self.client = Anthropic(api_key=api_key)
-        self.model = "claude-3-5-sonnet-20241022"
+        self.model = "claude-sonnet-4-5-20250929"
 
     async def analyze_tip(self, tip_text: str) -> Dict:
         """
