@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getLeagues, getMatches } from '@/lib/api';
 import { League } from '@/lib/types';
 import SportCard from '@/components/SportCard';
+import MultiGeneratorCard from '@/components/MultiGeneratorCard';
 
 interface SportWithCount extends League {
   matchCount: number;
@@ -57,6 +58,8 @@ export default function Home() {
 
   return (
     <div>
+      {/* Master Multi Generator - Focus of the site */}
+      <MultiGeneratorCard />
       {/* Hero Section */}
       <div className="text-center mb-12 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-sm font-medium mb-6 ring-1 ring-inset ring-indigo-700/10">
