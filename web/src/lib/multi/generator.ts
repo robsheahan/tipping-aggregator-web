@@ -19,7 +19,7 @@ export async function getAllUpcomingOutcomes(sports: SportConfig[]): Promise<Mul
   const matchesBySport = await Promise.all(
     sports.map(async (sport) => {
       try {
-        const events = await client.fetchMatches(sport.theoddsapiSport, sport.theoddsapiKey);
+        const events = await client.fetchMatches(sport.theoddsapiSport, sport.code);
         return { sport, events };
       } catch (error) {
         console.error(`Error fetching ${sport.code} matches:`, error);
