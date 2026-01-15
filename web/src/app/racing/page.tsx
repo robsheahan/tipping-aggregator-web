@@ -208,7 +208,7 @@ export default function HorseRacingPage() {
                         {runner.aiVerdict && (
                           <div className="mt-3 p-3 rounded-lg bg-slate-800/50 border border-slate-600">
                             <p className="text-sm text-slate-300 italic">
-                              💬 "{runner.aiVerdict}"
+                              💬 &ldquo;{runner.aiVerdict}&rdquo;
                             </p>
                           </div>
                         )}
