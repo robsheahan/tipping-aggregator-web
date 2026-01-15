@@ -135,41 +135,13 @@
     @apply bg-gradient-to-r from-indigo-600 to-purple-600;
   }
 
-  /* Terminal/Matrix Aesthetic for Multi Generator */
-  .terminal-card {
-    @apply bg-slate-950 border-2 border-green-500/30 rounded-xl;
-    @apply shadow-lg shadow-green-500/10;
-    font-family: 'Monaco', 'Courier New', monospace;
+  /* Modern Card Style for Multi Generator */
+  .modern-card {
+    @apply bg-white border border-slate-200 rounded-xl;
+    @apply shadow-sm;
   }
 
-  .terminal-text {
-    @apply text-green-400 font-mono;
-  }
-
-  .terminal-header {
-    @apply text-green-300 font-mono font-bold text-lg;
-  }
-
-  .probability-high {
-    @apply text-green-400;
-  }
-
-  .probability-medium {
-    @apply text-yellow-400;
-  }
-
-  .probability-low {
-    @apply text-red-400;
-  }
-
-  .multi-tab {
-    @apply px-6 py-3 font-mono text-sm;
-    @apply border border-green-500/30 bg-slate-900;
-    @apply hover:bg-green-500/10 transition-colors;
-    @apply rounded-lg;
-  }
-
-  .multi-tab-active {
-    @apply bg-green-500/20 border-green-400 text-green-400;
+  .modern-tab {
+    @apply transition-all duration-200;
   }
 }
