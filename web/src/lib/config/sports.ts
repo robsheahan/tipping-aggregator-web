@@ -10,7 +10,7 @@ export interface SportConfig {
   color: string;
   theoddsapiKey: string;
   theoddsapiSport: string;
-  marketType: '2way' | '3way';
+  marketType: '2way' | '3way' | 'racing';
 }
 
 export const SPORTS: Record<string, SportConfig> = {
@@ -73,6 +73,16 @@ export const SPORTS: Record<string, SportConfig> = {
     theoddsapiKey: 'rugbyunion_super_rugby',
     theoddsapiSport: 'rugbyunion',
     marketType: '2way',
+  },
+  RACING: {
+    code: 'RACING',
+    name: 'Australian Horse Racing',
+    displayName: 'Horse Racing',
+    icon: '🏇',
+    color: 'amber',
+    theoddsapiKey: 'horse_racing_australia',
+    theoddsapiSport: 'horse_racing',
+    marketType: 'racing',
   },
 };
 

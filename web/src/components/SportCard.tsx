@@ -29,6 +29,7 @@ export default function SportCard({
     orange: 'border-orange-500',
     purple: 'border-purple-500',
     cyan: 'border-cyan-500',
+    amber: 'border-amber-500',
   };
 
   // Use same neutral badge styling for all sports
@@ -50,8 +51,11 @@ export default function SportCard({
     );
   }
 
+  // Use special route for racing
+  const href = code === 'RACING' ? '/racing' : `/sport/${code.toLowerCase()}`;
+
   return (
-    <Link href={`/sport/${code.toLowerCase()}`} className="group block focus:outline-none">
+    <Link href={href} className="group block focus:outline-none">
       <div
         className={`
           bg-white rounded-xl border-2 border-slate-200 border-t-4

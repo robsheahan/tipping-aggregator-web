@@ -49,9 +49,39 @@ export default function RootLayout({
             </div>
           </div>
         </nav>
-        <main className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <main className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8 py-12 pb-32">
           {children}
         </main>
+
+        {/* Compliance Footer - Required for Australian Gambling Regulations */}
+        <footer className="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-700 py-4 z-40">
+          <div className="max-w-[1100px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+              <div className="flex items-center gap-4 text-slate-300">
+                <span className="font-semibold text-amber-400">18+</span>
+                <span>Gamble Responsibly</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <a
+                  href="https://www.betstop.gov.au"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-300 hover:text-white font-medium transition-colors underline underline-offset-4"
+                >
+                  National Self-Exclusion Register
+                </a>
+                <a
+                  href="https://www.gamblinghelponline.org.au"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-300 hover:text-white transition-colors underline underline-offset-4"
+                >
+                  Get Help
+                </a>
+              </div>
+            </div>
+          </div>
+        </footer>
       </body>
     </html>
   );
