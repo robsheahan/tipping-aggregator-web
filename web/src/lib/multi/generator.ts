@@ -186,7 +186,7 @@ export function selectBestBookmakerForMulti(
     }
 
     // Calculate total odds for this bookmaker
-    totalOdds = 1.0;
+    let totalOdds = 1.0;
     for (const outcome of outcomes) {
       const odds = outcome.bookmakerOdds[bestBookmaker];
       if (odds && odds > 1.0) {
