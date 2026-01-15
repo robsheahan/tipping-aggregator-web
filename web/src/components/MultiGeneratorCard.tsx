@@ -85,18 +85,9 @@ export default function MultiGeneratorCard() {
 
       const apiData = await response.json();
 
-      // Store all outcomes
+      // Store all outcomes - this will trigger regenerateMultis via useEffect
+      // which will respect current selectedSports and selectedBookmaker
       setAllOutcomes(apiData.allOutcomes || []);
-
-      // Store initial multi data
-      setData({
-        triple: apiData.triple,
-        nickel: apiData.nickel,
-        dime: apiData.dime,
-        score: apiData.score,
-        totalOutcomesAvailable: apiData.totalOutcomesAvailable,
-        lastUpdated: apiData.lastUpdated,
-      });
 
       setLastUpdated(new Date());
       setLoading(false);
@@ -132,7 +123,7 @@ export default function MultiGeneratorCard() {
     if (multi.legs.length === 0) return multi;
 
     let totalOdds = 1.0;
-    let hasAllOdds = true;
+    let missingLegsCount = 0;
 
     // Map legs to find bookmaker odds
     const updatedLegs = multi.legs.map(leg => {
@@ -142,7 +133,8 @@ export default function MultiGeneratorCard() {
       );
 
       if (!outcome || !outcome.bookmakerOdds[bookmaker]) {
-        hasAllOdds = false;
+        missingLegsCount++;
+        // Keep original odds but mark as unavailable
         return leg;
       }
 
@@ -155,12 +147,10 @@ export default function MultiGeneratorCard() {
       };
     });
 
-    if (!hasAllOdds) {
-      return {
-        ...multi,
-        warning: `${bookmaker} doesn't have odds for all legs`,
-      };
-    }
+    // If bookmaker doesn't have complete coverage, show warning
+    const warning = missingLegsCount > 0
+      ? `${bookmaker} doesn't have odds for ${missingLegsCount} ${missingLegsCount === 1 ? 'leg' : 'legs'}`
+      : undefined;
 
     return {
       ...multi,
@@ -169,7 +159,7 @@ export default function MultiGeneratorCard() {
       totalOdds,
       potentialPayout: totalOdds,
       lastUpdated: new Date().toISOString(),
-      warning: undefined,
+      warning,
     };
   }, [allOutcomes, findMatchId]);
 
@@ -218,20 +208,22 @@ export default function MultiGeneratorCard() {
     const currentMulti = data?.[selectedTab];
     if (!currentMulti || currentMulti.legs.length === 0) return [];
 
-    // Find bookmakers that have odds for ALL legs
-    const bookmakerSets = currentMulti.legs.map(leg => {
+    // Get all unique bookmakers across all legs (not just those with complete coverage)
+    const allBookmakers = new Set<string>();
+
+    currentMulti.legs.forEach(leg => {
       const outcome = allOutcomes.find(
         o => o.matchId === findMatchId(leg) && o.selection === leg.selection
       );
-      return outcome ? Object.keys(outcome.bookmakerOdds) : [];
+      if (outcome) {
+        Object.keys(outcome.bookmakerOdds).forEach(bookmaker => {
+          allBookmakers.add(bookmaker);
+        });
+      }
     });
 
-    // Find intersection of all bookmaker sets
-    if (bookmakerSets.length === 0) return [];
-
-    return bookmakerSets[0].filter(bookmaker =>
-      bookmakerSets.every(set => set.includes(bookmaker))
-    );
+    // Sort bookmakers alphabetically
+    return Array.from(allBookmakers).sort();
   };
 
   // Auto-refresh every 60 seconds
