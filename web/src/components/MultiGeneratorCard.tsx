@@ -177,6 +177,13 @@ export default function MultiGeneratorCard() {
               <div className="text-5xl md:text-6xl font-bold text-indigo-900">
                 {(currentMulti.successProbability * 100).toFixed(1)}%
               </div>
+              <div className="mt-4 pt-4 border-t border-indigo-200">
+                <div className="text-xs text-indigo-700 font-semibold mb-1">Total Payout</div>
+                <div className="text-2xl md:text-3xl font-bold text-indigo-900">
+                  ${currentMulti.potentialPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <div className="text-xs text-indigo-600 mt-1">on $1 bet</div>
+              </div>
             </div>
           </div>
 
@@ -209,10 +216,10 @@ export default function MultiGeneratorCard() {
                 <div className="text-right">
                   <div className="text-xs text-slate-500 mb-1">Total Multi Odds</div>
                   <div className="text-3xl font-bold text-indigo-900">
-                    ${currentMulti.totalOdds.toFixed(2)}
+                    ${currentMulti.totalOdds.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                   <div className="text-xs text-slate-500 mt-1">
-                    $1 bet returns ${currentMulti.potentialPayout.toFixed(2)}
+                    $1 bet returns ${currentMulti.potentialPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
               </div>
