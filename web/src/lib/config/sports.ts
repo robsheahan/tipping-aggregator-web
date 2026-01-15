@@ -74,16 +74,6 @@ export const SPORTS: Record<string, SportConfig> = {
     theoddsapiSport: 'rugbyunion',
     marketType: '2way',
   },
-  RACING: {
-    code: 'RACING',
-    name: 'Australian Horse Racing',
-    displayName: 'Horse Racing',
-    icon: '🏇',
-    color: 'amber',
-    theoddsapiKey: 'horse_racing_australia',
-    theoddsapiSport: 'horse_racing',
-    marketType: 'racing',
-  },
 };
 
 export function getSportConfig(code: string): SportConfig | null {

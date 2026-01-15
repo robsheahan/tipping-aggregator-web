@@ -27,14 +27,6 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Racing events should use the /api/racing endpoint
-  if (sportConfig.marketType === 'racing') {
-    return NextResponse.json(
-      { error: 'Racing events should use /api/racing endpoint' },
-      { status: 400 }
-    );
-  }
-
   const sport = sportConfig.theoddsapiSport;
 
   try {

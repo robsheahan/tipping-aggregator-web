@@ -26,14 +26,6 @@ export async function GET(
     );
   }
 
-  // Racing events should use the /api/racing endpoint, not match details
-  if (sportConfig.marketType === 'racing') {
-    return NextResponse.json(
-      { error: 'Racing events are not supported in match detail view' },
-      { status: 400 }
-    );
-  }
-
   const sport = sportConfig.theoddsapiSport;
 
   try {
