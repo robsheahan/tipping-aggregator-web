@@ -147,8 +147,8 @@ export function selectBestBookmakerForMulti(
   let bestBookmaker = '';
   let bestTotalOdds = 0;
 
-  // Test each bookmaker
-  for (const bookmaker of allBookmakers) {
+  // Test each bookmaker (convert Set to Array for iteration)
+  for (const bookmaker of Array.from(allBookmakers)) {
     // Check if this bookmaker has odds for ALL outcomes
     let hasAllOdds = true;
     let totalOdds = 1.0;
@@ -178,7 +178,7 @@ export function selectBestBookmakerForMulti(
     }
 
     let maxCount = 0;
-    for (const [bookmaker, count] of bookmakerCounts.entries()) {
+    for (const [bookmaker, count] of Array.from(bookmakerCounts.entries())) {
       if (count > maxCount) {
         maxCount = count;
         bestBookmaker = bookmaker;
