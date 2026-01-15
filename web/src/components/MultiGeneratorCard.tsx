@@ -311,18 +311,8 @@ export default function MultiGeneratorCard() {
     );
   }
 
-  // No outcomes available
-  if (data.totalOutcomesAvailable === 0) {
-    return (
-      <div className="modern-card p-8 mb-8">
-        <h2 className="text-2xl font-bold text-slate-900 mb-4">Master Multi Generator</h2>
-        <div className="text-center py-8">
-          <p className="text-slate-600 text-lg">No upcoming matches available</p>
-          <p className="text-slate-400 text-sm mt-2">Check back soon for new multis</p>
-        </div>
-      </div>
-    );
-  }
+  // No outcomes available - but still show UI with filters
+  const hasNoOutcomes = !data || data.totalOutcomesAvailable === 0;
 
   const availableBookmakers = getAvailableBookmakers();
 
@@ -436,7 +426,19 @@ export default function MultiGeneratorCard() {
         </div>
       </div>
 
-      {currentMulti && (
+      {/* No outcomes message - shown when no sports selected or no data */}
+      {hasNoOutcomes ? (
+        <div className="mb-6 p-8 bg-slate-50 border border-slate-200 rounded-lg">
+          <div className="text-center">
+            <p className="text-slate-600 text-lg mb-2">No matches available</p>
+            {selectedSports.length === 0 ? (
+              <p className="text-slate-500 text-sm">Please select at least one sport from the filter</p>
+            ) : (
+              <p className="text-slate-400 text-sm">No upcoming matches for selected sports</p>
+            )}
+          </div>
+        </div>
+      ) : currentMulti ? (
         <>
           {/* Warning Banner */}
           {currentMulti.warning && (
@@ -546,7 +548,7 @@ export default function MultiGeneratorCard() {
             </div>
           )}
         </>
-      )}
+      ) : null}
 
       {/* Compliance Footer */}
       <div className="mt-8 pt-6 border-t border-slate-200">
