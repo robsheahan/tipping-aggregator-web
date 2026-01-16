@@ -550,7 +550,7 @@ export default function MultiGeneratorCard() {
               </div>
 
               <div className="mt-4 pt-4 border-t border-indigo-200">
-                <div className="text-xs text-indigo-700 font-semibold mb-1">Multi Success Probability</div>
+                <div className="text-xs text-indigo-700 font-semibold mb-1">Multi Success True Probability</div>
                 <div className="text-2xl md:text-3xl font-bold text-indigo-900">
                   {(currentMulti.successProbability * 100).toFixed(1)}%
                 </div>
