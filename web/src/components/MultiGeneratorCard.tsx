@@ -514,10 +514,10 @@ export default function MultiGeneratorCard() {
                   <button
                     onClick={() => {
                       setMinTrueProbability(prev => prev - 0.05);
-                      setSelectionOffset(prev => prev + 3);
+                      setSelectionOffset(0);
                     }}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors"
-                    title="Lower probability threshold and skip to riskier bets for higher payout"
+                    title="Lower probability threshold to include riskier bets with higher odds"
                   >
                     Higher Payout
                   </button>
