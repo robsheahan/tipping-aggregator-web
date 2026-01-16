@@ -64,10 +64,11 @@ export default function MultiGeneratorCard() {
   const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
 
   // Filter state
-  const [selectedSports, setSelectedSports] = useState<string[]>(ALL_SPORTS.map(s => s.code));
+  const [selectedSports, setSelectedSports] = useState<string[]>([]);
   const [selectedBookmaker, setSelectedBookmaker] = useState<string | null>(null); // null = best bookmaker
   const [showSportFilter, setShowSportFilter] = useState(false);
   const [showBookmakerSelector, setShowBookmakerSelector] = useState(false);
+  const [minTrueProbability, setMinTrueProbability] = useState(0.65); // Default 65% threshold
 
   // Refs for click-outside detection
   const sportFilterRef = useRef<HTMLDivElement>(null);
@@ -164,13 +165,13 @@ export default function MultiGeneratorCard() {
     };
   }, [allOutcomes, findMatchId]);
 
-  // Regenerate multis based on sport filter and bookmaker selection
+  // Regenerate multis based on sport filter, TP threshold, and bookmaker selection
   const regenerateMultis = useCallback(() => {
     if (allOutcomes.length === 0) return;
 
-    // Filter outcomes by selected sports
+    // Filter outcomes by selected sports AND minimum true probability
     const filteredOutcomes = allOutcomes.filter(outcome =>
-      selectedSports.includes(outcome.sport)
+      selectedSports.includes(outcome.sport) && outcome.trueProbability >= minTrueProbability
     );
 
     if (filteredOutcomes.length === 0) {
@@ -202,7 +203,7 @@ export default function MultiGeneratorCard() {
     }
 
     setData(newMultis);
-  }, [allOutcomes, selectedSports, selectedBookmaker, createEmptyMulti, recalculateMultiForBookmaker]);
+  }, [allOutcomes, selectedSports, selectedBookmaker, minTrueProbability, createEmptyMulti, recalculateMultiForBookmaker]);
 
   // Get all available bookmakers from current multi
   const getAvailableBookmakers = (): string[] => {
@@ -227,6 +228,42 @@ export default function MultiGeneratorCard() {
     return Array.from(allBookmakers).sort();
   };
 
+  // Load saved preferences from localStorage on mount
+  useEffect(() => {
+    // Load saved sport selections
+    const savedSports = localStorage.getItem('multiGenerator_selectedSports');
+    if (savedSports) {
+      try {
+        const parsed = JSON.parse(savedSports);
+        setSelectedSports(parsed);
+      } catch (e) {
+        // If parsing fails, default to all sports
+        setSelectedSports(ALL_SPORTS.map(s => s.code));
+      }
+    } else {
+      // No saved preferences, default to all sports
+      setSelectedSports(ALL_SPORTS.map(s => s.code));
+    }
+
+    // Load saved TP threshold
+    const savedThreshold = localStorage.getItem('multiGenerator_minTrueProbability');
+    if (savedThreshold) {
+      setMinTrueProbability(parseFloat(savedThreshold));
+    }
+  }, []);
+
+  // Save sport selections to localStorage when they change
+  useEffect(() => {
+    if (selectedSports.length > 0) {
+      localStorage.setItem('multiGenerator_selectedSports', JSON.stringify(selectedSports));
+    }
+  }, [selectedSports]);
+
+  // Save TP threshold to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('multiGenerator_minTrueProbability', minTrueProbability.toString());
+  }, [minTrueProbability]);
+
   // Auto-refresh every 60 seconds
   useEffect(() => {
     fetchMultiData();
@@ -243,7 +280,7 @@ export default function MultiGeneratorCard() {
     if (allOutcomes.length > 0) {
       regenerateMultis();
     }
-  }, [allOutcomes, selectedSports, selectedBookmaker, regenerateMultis]);
+  }, [allOutcomes, selectedSports, selectedBookmaker, minTrueProbability, regenerateMultis]);
 
   // Update seconds counter
   useEffect(() => {
@@ -452,10 +489,44 @@ export default function MultiGeneratorCard() {
           <div className="mb-6 p-6 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl">
             <div className="text-center">
               <div className="text-sm text-indigo-700 font-semibold mb-2">Total Payout</div>
-              <div className="text-5xl md:text-6xl font-bold text-indigo-900">
-                ${currentMulti.potentialPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              <div className="flex items-center justify-center gap-4">
+                <div className="text-5xl md:text-6xl font-bold text-indigo-900">
+                  ${currentMulti.potentialPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <button
+                  onClick={() => {
+                    if (minTrueProbability > 0.45) {
+                      setMinTrueProbability(prev => Math.max(0.45, prev - 0.05));
+                    }
+                  }}
+                  disabled={minTrueProbability <= 0.45}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                    minTrueProbability > 0.45
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
+                  title={minTrueProbability <= 0.45 ? 'Minimum threshold reached' : 'Lower probability threshold for higher payout'}
+                >
+                  Higher Payout
+                </button>
               </div>
-              <div className="text-xs text-indigo-600 mt-1">on $1 bet</div>
+              <div className="text-xs text-indigo-600 mt-2">on $1 bet</div>
+
+              {/* Threshold indicator and Reset button */}
+              <div className="mt-3 flex items-center justify-center gap-3">
+                <span className="text-xs text-indigo-700">
+                  Min Win Probability: <span className="font-semibold">{(minTrueProbability * 100).toFixed(0)}%</span>
+                </span>
+                {minTrueProbability !== 0.65 && (
+                  <button
+                    onClick={() => setMinTrueProbability(0.65)}
+                    className="px-3 py-1 text-xs bg-white border border-indigo-300 text-indigo-700 rounded hover:bg-indigo-50 transition-colors font-medium"
+                  >
+                    Reset to Best Value
+                  </button>
+                )}
+              </div>
+
               <div className="mt-4 pt-4 border-t border-indigo-200">
                 <div className="text-xs text-indigo-700 font-semibold mb-1">Multi Success Score</div>
                 <div className="text-2xl md:text-3xl font-bold text-indigo-900">
