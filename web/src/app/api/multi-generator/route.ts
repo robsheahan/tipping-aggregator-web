@@ -7,6 +7,10 @@
 import { NextResponse } from 'next/server';
 import { getAllUpcomingOutcomes, generateAllMultis } from '@/lib/multi/generator';
 
+// Force dynamic rendering - don't try to fetch during build
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     console.log('Generating Master Multis from ALL sports...');
