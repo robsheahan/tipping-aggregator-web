@@ -190,7 +190,13 @@ export default function MultiGeneratorCard() {
 
     // Apply selection offset (for "Generate New Multi" feature)
     // Skip the first N*selectionOffset outcomes to get different selections
-    const offsetOutcomes = filteredOutcomes.slice(selectionOffset);
+    // If offset exceeds available outcomes, wrap back to start
+    let actualOffset = selectionOffset;
+    if (selectionOffset >= filteredOutcomes.length) {
+      actualOffset = 0;
+      setSelectionOffset(0); // Reset to start when we run out
+    }
+    const offsetOutcomes = filteredOutcomes.slice(actualOffset);
 
     // Generate multis with offset outcomes
     let newMultis = generateAllMultis(offsetOutcomes);
