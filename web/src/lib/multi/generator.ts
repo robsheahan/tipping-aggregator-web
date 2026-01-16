@@ -193,13 +193,13 @@ export async function getAllUpcomingOutcomes(): Promise<MultiOutcome[]> {
     }
   }
 
-  // FILTER: Only outcomes with True Probability > 65%
-  const filteredOutcomes = allOutcomes.filter(outcome => outcome.trueProbability > 0.65);
+  // FILTER: Only outcomes with True Probability > 30% (lower threshold allows "Higher Payout" button to work)
+  const filteredOutcomes = allOutcomes.filter(outcome => outcome.trueProbability > 0.30);
 
   // SORT: By Edge (highest to lowest) - prioritize value, not just probability
   filteredOutcomes.sort((a, b) => b.edge - a.edge);
 
-  console.log(`Filtered to ${filteredOutcomes.length} high-probability outcomes (TP > 65%), sorted by Edge`);
+  console.log(`Filtered to ${filteredOutcomes.length} outcomes (TP > 30%), sorted by Edge`);
 
   return filteredOutcomes;
 }
