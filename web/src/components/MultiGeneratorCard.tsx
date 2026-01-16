@@ -494,54 +494,53 @@ export default function MultiGeneratorCard() {
           <div className="mb-6 p-6 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-xl">
             <div className="text-center">
               <div className="text-sm text-indigo-700 font-semibold mb-2">Total Payout</div>
-              <div className="flex items-center justify-center gap-3 flex-wrap">
+              <div className="flex items-center justify-center gap-8 flex-wrap">
+                {/* Generate New Multi - Left side */}
+                <button
+                  onClick={() => setSelectionOffset(prev => prev + 3)}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors"
+                  title="Skip current selections and generate new multi with similar odds"
+                >
+                  Generate New Multi
+                </button>
+
+                {/* Total Payout - Center */}
                 <div className="text-5xl md:text-6xl font-bold text-indigo-900">
                   ${currentMulti.potentialPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
+
+                {/* Higher Payout & Reset - Right side */}
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={() => {
-                      if (minTrueProbability > 0.45) {
-                        setMinTrueProbability(prev => Math.max(0.45, prev - 0.05));
-                      }
+                      setMinTrueProbability(prev => prev - 0.05);
+                      setSelectionOffset(prev => prev + 3);
                     }}
-                    disabled={minTrueProbability <= 0.45}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                      minTrueProbability > 0.45
-                        ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                        : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    }`}
-                    title={minTrueProbability <= 0.45 ? 'Minimum threshold reached' : 'Lower probability threshold for higher payout'}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors"
+                    title="Lower probability threshold and skip to riskier bets for higher payout"
                   >
                     Higher Payout
                   </button>
-                  <button
-                    onClick={() => setSelectionOffset(prev => prev + 3)}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors"
-                    title="Skip current selections and generate new multi with similar odds"
-                  >
-                    Generate New Multi
-                  </button>
+                  {(minTrueProbability !== 0.65 || selectionOffset !== 0) && (
+                    <button
+                      onClick={() => {
+                        setMinTrueProbability(0.65);
+                        setSelectionOffset(0);
+                      }}
+                      className="px-4 py-2 text-sm bg-white border border-indigo-300 text-indigo-700 rounded hover:bg-indigo-50 transition-colors font-semibold"
+                    >
+                      Reset to Best Value
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="text-xs text-indigo-600 mt-2">on $1 bet</div>
 
-              {/* Threshold indicator and Reset button */}
-              <div className="mt-3 flex items-center justify-center gap-3">
+              {/* Threshold indicator */}
+              <div className="mt-3">
                 <span className="text-xs text-indigo-700">
                   Min Win Probability: <span className="font-semibold">{(minTrueProbability * 100).toFixed(0)}%</span>
                 </span>
-                {(minTrueProbability !== 0.65 || selectionOffset !== 0) && (
-                  <button
-                    onClick={() => {
-                      setMinTrueProbability(0.65);
-                      setSelectionOffset(0);
-                    }}
-                    className="px-3 py-1 text-xs bg-white border border-indigo-300 text-indigo-700 rounded hover:bg-indigo-50 transition-colors font-medium"
-                  >
-                    Reset to Best Value
-                  </button>
-                )}
               </div>
 
               <div className="mt-4 pt-4 border-t border-indigo-200">
