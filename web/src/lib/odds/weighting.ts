@@ -10,7 +10,7 @@ import { WeightMap } from './types';
  * Simplified version - uses equal weights for all providers
  * In a full implementation, this would use historical Brier scores
  *
- * @param league League code (e.g., 'EPL', 'AFL', 'NRL')
+ * @param league League code (e.g., 'AFL', 'NRL')
  * @param marketType Market type (e.g., 'moneyline_2way', 'moneyline_3way')
  * @returns Weight map for providers
  */

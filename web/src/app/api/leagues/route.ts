@@ -7,18 +7,13 @@ import { NextResponse } from 'next/server';
 import { getAllSports } from '@/lib/config/sports';
 
 export async function GET() {
-  // Generate leagues from sport config
+  // Generate leagues from sport config (AFL and NRL only)
   const leagues = getAllSports().map((sport, index) => ({
     id: index + 1,
     name: sport.name,
     sport: sport.theoddsapiSport,
     code: sport.code,
-    country:
-      sport.code === 'EPL'
-        ? 'England'
-        : sport.code === 'NFL' || sport.code === 'NBA'
-        ? 'USA'
-        : 'Australia',
+    country: 'Australia',
     icon: sport.icon,
     color: sport.color,
     displayName: sport.displayName,

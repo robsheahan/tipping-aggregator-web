@@ -12,56 +12,13 @@ import {
 
 const BASE_URL = 'https://api.the-odds-api.com/v4';
 
-// Sport keys mapping - includes ALL sports for multi generator
+// Sport keys mapping - AFL and NRL only
 const SPORT_KEYS: { [sport: string]: { [league: string]: string } } = {
-  soccer: {
-    EPL: 'soccer_epl',
-    LA_LIGA: 'soccer_spain_la_liga',
-    BUNDESLIGA: 'soccer_germany_bundesliga',
-    SERIE_A: 'soccer_italy_serie_a',
-    LIGUE_1: 'soccer_france_ligue_one',
-    UEFA_CHAMPIONS: 'soccer_uefa_champs_league',
-    UEFA_EUROPA: 'soccer_uefa_europa_league',
-  },
   afl: {
     AFL: 'aussierules_afl',
   },
   nrl: {
     NRL: 'rugbyleague_nrl',
-  },
-  americanfootball: {
-    NFL: 'americanfootball_nfl',
-    NCAAF: 'americanfootball_ncaaf',
-  },
-  basketball: {
-    NBA: 'basketball_nba',
-    NCAAB: 'basketball_ncaab',
-  },
-  baseball: {
-    MLB: 'baseball_mlb',
-  },
-  icehockey: {
-    NHL: 'icehockey_nhl',
-  },
-  rugbyunion: {
-    RUGBY: 'rugbyunion_super_rugby',
-    RUGBY_UNION: 'rugbyunion_super_rugby',
-  },
-  rugbyleague: {
-    RUGBY_LEAGUE: 'rugbyleague_nrl',
-  },
-  mma: {
-    UFC: 'mma_mixed_martial_arts',
-  },
-  boxing: {
-    BOXING: 'boxing_boxing',
-  },
-  // tennis: tennis_atp not available in AU region
-  cricket: {
-    CRICKET: 'cricket_test_match',
-  },
-  horse_racing: {
-    RACING: 'horse_racing_australia',
   },
 };
 

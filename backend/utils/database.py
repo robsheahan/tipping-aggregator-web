@@ -52,9 +52,17 @@ class SupabaseClient:
             # Convert runners list to JSONB
             data['runners'] = [r.dict() if hasattr(r, 'dict') else r for r in data.get('runners', [])]
 
-            # Convert datetime to ISO string for JSON serialization
-            if 'start_time' in data and hasattr(data['start_time'], 'isoformat'):
-                data['start_time'] = data['start_time'].isoformat()
+            # Convert all datetime fields to ISO string for JSON serialization
+            datetime_fields = ['start_time', 'created_at', 'updated_at']
+            for field in datetime_fields:
+                if field in data and hasattr(data[field], 'isoformat'):
+                    data[field] = data[field].isoformat()
+
+            # Convert any datetime objects in runners
+            for runner in data['runners']:
+                for key, value in runner.items():
+                    if hasattr(value, 'isoformat'):
+                        runner[key] = value.isoformat()
 
             result = self.client.table("races").upsert(data).execute()
             logger.debug(f"Upserted race: {race.id}")
@@ -109,6 +117,9 @@ class SupabaseClient:
         """
         try:
             data = tip.dict(exclude={'id'})
+            # Convert datetime to ISO string
+            if 'scraped_at' in data and hasattr(data['scraped_at'], 'isoformat'):
+                data['scraped_at'] = data['scraped_at'].isoformat()
             result = self.client.table("expert_tips").upsert(data).execute()
             logger.debug(f"Saved tip: {tip.source} - {tip.runner_name}")
             return result
@@ -140,6 +151,9 @@ class SupabaseClient:
         """
         try:
             data = consensus.dict(exclude={'id'})
+            # Convert datetime to ISO string
+            if 'updated_at' in data and hasattr(data['updated_at'], 'isoformat'):
+                data['updated_at'] = data['updated_at'].isoformat()
             result = self.client.table("consensus_scores").upsert(data).execute()
             logger.debug(f"Saved consensus: {consensus.runner_name} - Score: {consensus.consensus_score}")
             return result

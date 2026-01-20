@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { getLeagues, getMatches } from '@/lib/api';
 import { League } from '@/lib/types';
 import SportCard from '@/components/SportCard';
-import MultiGeneratorCard from '@/components/MultiGeneratorCard';
 
 interface SportWithCount extends League {
   matchCount: number;
@@ -45,21 +44,14 @@ export default function Home() {
           })
         );
 
-        // Reorder sports: NRL, AFL, EPL first, then rest
-        const sportOrder = ['NRL', 'AFL', 'EPL'];
-        const orderedSports = sportsWithCounts.sort((a, b) => {
-          const aIndex = sportOrder.indexOf(a.code);
-          const bIndex = sportOrder.indexOf(b.code);
+        // Filter to only AFL and NRL, with NRL first
+        const filteredSports = sportsWithCounts.filter(
+          sport => sport.code === 'AFL' || sport.code === 'NRL'
+        );
 
-          // If both are in the priority list, sort by their index
-          if (aIndex !== -1 && bIndex !== -1) {
-            return aIndex - bIndex;
-          }
-          // If only a is in the list, it comes first
-          if (aIndex !== -1) return -1;
-          // If only b is in the list, it comes first
-          if (bIndex !== -1) return 1;
-          // Otherwise maintain original order
+        const orderedSports = filteredSports.sort((a, b) => {
+          if (a.code === 'NRL') return -1;
+          if (b.code === 'NRL') return 1;
           return 0;
         });
 
@@ -96,9 +88,6 @@ export default function Home() {
           Aggregate probabilities from multiple bookmakers to make informed tipping decisions across all major sports.
         </p>
       </div>
-
-      {/* Master Multi Generator */}
-      <MultiGeneratorCard />
 
       {/* Error State */}
       {error && (

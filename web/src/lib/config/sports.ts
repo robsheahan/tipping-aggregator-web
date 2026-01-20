@@ -14,16 +14,6 @@ export interface SportConfig {
 }
 
 export const SPORTS: Record<string, SportConfig> = {
-  EPL: {
-    code: 'EPL',
-    name: 'English Premier League',
-    displayName: 'EPL',
-    icon: '⚽',
-    color: 'purple',
-    theoddsapiKey: 'soccer_epl',
-    theoddsapiSport: 'soccer',
-    marketType: '3way',
-  },
   AFL: {
     code: 'AFL',
     name: 'Australian Football League',
@@ -42,36 +32,6 @@ export const SPORTS: Record<string, SportConfig> = {
     color: 'blue',
     theoddsapiKey: 'rugbyleague_nrl',
     theoddsapiSport: 'nrl',
-    marketType: '2way',
-  },
-  NFL: {
-    code: 'NFL',
-    name: 'National Football League',
-    displayName: 'NFL',
-    icon: '🏈',
-    color: 'green',
-    theoddsapiKey: 'americanfootball_nfl',
-    theoddsapiSport: 'americanfootball',
-    marketType: '2way',
-  },
-  NBA: {
-    code: 'NBA',
-    name: 'National Basketball Association',
-    displayName: 'NBA',
-    icon: '🏀',
-    color: 'orange',
-    theoddsapiKey: 'basketball_nba',
-    theoddsapiSport: 'basketball',
-    marketType: '2way',
-  },
-  RUGBY: {
-    code: 'RUGBY',
-    name: 'Super Rugby Pacific',
-    displayName: 'Super Rugby',
-    icon: '🏉',
-    color: 'cyan',
-    theoddsapiKey: 'rugbyunion_super_rugby',
-    theoddsapiSport: 'rugbyunion',
     marketType: '2way',
   },
 };

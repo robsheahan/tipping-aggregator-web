@@ -331,16 +331,16 @@ if __name__ == "__main__":
         logger.info("Running in scheduled mode")
 
         # Get schedule from environment or use default
-        schedule_time = os.getenv("WORKER_SCHEDULE", "0 */2 * * *")  # Every 2 hours
+        schedule_time = os.getenv("WORKER_SCHEDULE", "0 2 * * 1")  # Once a week (Monday at 2 AM)
 
-        # For simplicity, run every 2 hours at the top of the hour
-        schedule.every(2).hours.at(":00").do(run_scheduled)
+        # Run once a week on Monday at 2 AM
+        schedule.every().monday.at("02:00").do(run_scheduled)
 
         # Also run once at startup
         logger.info("Running initial aggregation...")
         run_scheduled()
 
-        logger.info(f"Worker scheduled to run every 2 hours")
+        logger.info(f"Worker scheduled to run once a week (Monday at 2 AM)")
 
         # Keep the script running
         while True:

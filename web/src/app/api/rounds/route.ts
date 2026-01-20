@@ -10,7 +10,7 @@ import { generateRoundsFromMatches } from '@/lib/rounds/roundMappings';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
-  const league = searchParams.get('league') || 'EPL';
+  const league = searchParams.get('league') || 'AFL';
 
   // Get sport config
   const sportConfig = getSportConfig(league);
