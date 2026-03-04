@@ -36,6 +36,16 @@ export interface Match {
   confidence: number | null;
   contributing_providers: number;
   last_updated: string | null;
+
+  // Spread & totals
+  home_spread?: number | null;
+  away_spread?: number | null;
+  total_points?: number | null;
+
+  // Predicted scores
+  home_predicted_score?: number | null;
+  away_predicted_score?: number | null;
+  predicted_margin?: number | null;
 }
 
 export interface ProviderOddsDetail {
@@ -49,6 +59,26 @@ export interface ProviderOddsDetail {
   timestamp: string;
 }
 
+export interface ExpertTip {
+  source: string;
+  expert_name: string | null;
+  tipped_team: string;
+  predicted_margin: number | null;
+  sport: string;
+}
+
+export interface TipConsensus {
+  home_tips: number;
+  away_tips: number;
+  total_tips: number;
+  consensus_team: string | null;
+  consensus_pct: number | null;
+  consensus_strength: string | null;
+  avg_predicted_margin: number | null;
+}
+
 export interface MatchDetail extends Match {
   provider_odds: ProviderOddsDetail[];
+  expert_tips?: ExpertTip[];
+  tip_consensus?: TipConsensus | null;
 }

@@ -8,7 +8,11 @@ import {
   formatProbability,
   formatDateTime,
   formatConfidence,
+  formatScore,
+  formatSpread,
+  formatConsensusStrength,
   getTipColor,
+  getConsensusColor,
 } from '@/utils/formatting';
 
 export default function MatchDetailPage() {
@@ -165,6 +169,135 @@ export default function MatchDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Predicted Score */}
+      {match.home_predicted_score != null && match.away_predicted_score != null && (
+        <div className="card mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Predicted Score
+          </h2>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <div className="text-sm text-gray-500 mb-1">{match.home_team.name}</div>
+              <div className="text-3xl font-bold text-blue-600">
+                {formatScore(match.home_predicted_score)}
+              </div>
+            </div>
+            <div className="flex items-center justify-center">
+              <div>
+                <div className="text-sm text-gray-500 mb-1">Margin</div>
+                <div className="text-xl font-semibold text-gray-700">
+                  {match.predicted_margin?.toFixed(1)} pts
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="text-sm text-gray-500 mb-1">{match.away_team.name}</div>
+              <div className="text-3xl font-bold text-red-600">
+                {formatScore(match.away_predicted_score)}
+              </div>
+            </div>
+          </div>
+          {(match.home_spread != null || match.total_points != null) && (
+            <div className="mt-4 pt-4 border-t border-gray-200 flex justify-center gap-8 text-sm text-gray-600">
+              {match.home_spread != null && (
+                <div>
+                  Line: <span className="font-mono font-medium">{formatSpread(match.home_spread)}</span>
+                </div>
+              )}
+              {match.total_points != null && (
+                <div>
+                  Total: <span className="font-mono font-medium">{match.total_points.toFixed(1)}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Expert Tips Consensus */}
+      {match.tip_consensus && match.tip_consensus.total_tips > 0 && (
+        <div className="card mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Expert Consensus
+          </h2>
+          <div className="mb-3">
+            <div className="flex justify-between text-sm mb-1">
+              <span className="font-medium">{match.home_team.name} ({match.tip_consensus.home_tips})</span>
+              <span className="font-medium">{match.away_team.name} ({match.tip_consensus.away_tips})</span>
+            </div>
+            {/* Consensus bar */}
+            <div className="w-full h-6 rounded-full overflow-hidden flex bg-gray-200">
+              {match.tip_consensus.total_tips > 0 && (
+                <>
+                  <div
+                    className="bg-blue-500 h-full transition-all"
+                    style={{ width: `${(match.tip_consensus.home_tips / match.tip_consensus.total_tips) * 100}%` }}
+                  />
+                  <div
+                    className="bg-red-500 h-full transition-all"
+                    style={{ width: `${(match.tip_consensus.away_tips / match.tip_consensus.total_tips) * 100}%` }}
+                  />
+                </>
+              )}
+            </div>
+          </div>
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-600">
+              {match.tip_consensus.total_tips} expert{match.tip_consensus.total_tips !== 1 ? 's' : ''} tip{' '}
+              <span className="font-semibold">{match.tip_consensus.consensus_team}</span>
+            </span>
+            <span className={`font-semibold ${getConsensusColor(match.tip_consensus.consensus_strength)}`}>
+              {formatConsensusStrength(match.tip_consensus.consensus_strength)}
+              {match.tip_consensus.consensus_pct != null && (
+                <> ({(match.tip_consensus.consensus_pct * 100).toFixed(0)}%)</>
+              )}
+            </span>
+          </div>
+          {match.tip_consensus.avg_predicted_margin != null && (
+            <div className="text-xs text-gray-500 mt-2">
+              Avg predicted margin: {match.tip_consensus.avg_predicted_margin.toFixed(1)} pts
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Expert Tips Table */}
+      {match.expert_tips && match.expert_tips.length > 0 && (
+        <div className="card mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            Expert Tips ({match.expert_tips.length})
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expert</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipped Team</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Margin</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {match.expert_tips.map((tip, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-600">{tip.source}</td>
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{tip.expert_name || '-'}</td>
+                    <td className="px-4 py-3 text-sm font-semibold">
+                      <span className={tip.tipped_team === match.home_team.name ? 'text-blue-600' : 'text-red-600'}>
+                        {tip.tipped_team}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-center text-sm font-mono text-gray-700">
+                      {tip.predicted_margin != null ? `${tip.predicted_margin.toFixed(1)} pts` : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Bookmaker odds breakdown */}
       {match.provider_odds && match.provider_odds.length > 0 && (

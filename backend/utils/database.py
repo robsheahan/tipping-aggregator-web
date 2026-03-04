@@ -10,6 +10,7 @@ from supabase import create_client, Client
 from loguru import logger
 
 from models.database import Meet, Race, RaceOdds, ExpertTip, ConsensusScore
+from models.sport_models import SportMatch, SportExpertTip, SportTipConsensus
 
 class SupabaseClient:
     """
@@ -225,6 +226,100 @@ class SupabaseClient:
             logger.error(f"Error tracking click: {e}")
             # Don't raise - analytics failure shouldn't break the app
             pass
+
+    # ========================================
+    # Sport Match Methods (AFL/NRL)
+    # ========================================
+
+    async def upsert_sport_match(self, match: SportMatch):
+        """Upsert a sport match with aggregated odds and predictions"""
+        try:
+            data = match.dict()
+            result = self.client.table("sport_matches").upsert(data).execute()
+            logger.debug(f"Upserted sport match: {match.home_team} vs {match.away_team}")
+            return result
+        except Exception as e:
+            logger.error(f"Error upserting sport match {match.id}: {e}")
+            raise
+
+    async def save_sport_expert_tip(self, tip: SportExpertTip):
+        """Save an expert tip for a sport match"""
+        try:
+            data = tip.dict()
+            result = self.client.table("sport_expert_tips").upsert(
+                data, on_conflict="match_id,source,expert_name"
+            ).execute()
+            logger.debug(f"Saved sport tip: {tip.source} - {tip.tipped_team}")
+            return result
+        except Exception as e:
+            logger.error(f"Error saving sport tip: {e}")
+            raise
+
+    async def upsert_sport_tip_consensus(self, consensus: SportTipConsensus):
+        """Upsert tip consensus for a sport match"""
+        try:
+            data = consensus.dict()
+            result = self.client.table("sport_tip_consensus").upsert(
+                data, on_conflict="match_id"
+            ).execute()
+            logger.debug(f"Upserted consensus for match: {consensus.match_id}")
+            return result
+        except Exception as e:
+            logger.error(f"Error upserting sport consensus: {e}")
+            raise
+
+    async def get_sport_matches(self, league: Optional[str] = None, upcoming_only: bool = True) -> List[Dict]:
+        """Get sport matches, optionally filtered by league"""
+        try:
+            query = self.client.table("sport_matches").select("*")
+            if league:
+                query = query.eq("league", league)
+            if upcoming_only:
+                from datetime import datetime, timezone
+                now = datetime.now(timezone.utc).isoformat()
+                query = query.gte("commence_time", now)
+            query = query.order("commence_time")
+            result = query.execute()
+            return result.data
+        except Exception as e:
+            logger.error(f"Error getting sport matches: {e}")
+            return []
+
+    async def get_sport_match_with_tips(self, match_id: str) -> Optional[Dict]:
+        """Get a sport match with its expert tips and consensus"""
+        try:
+            # Get the match
+            match_result = self.client.table("sport_matches") \
+                .select("*") \
+                .eq("id", match_id) \
+                .single() \
+                .execute()
+
+            if not match_result.data:
+                return None
+
+            match_data = match_result.data
+
+            # Get expert tips
+            tips_result = self.client.table("sport_expert_tips") \
+                .select("*") \
+                .eq("match_id", match_id) \
+                .execute()
+            match_data["expert_tips"] = tips_result.data or []
+
+            # Get consensus
+            consensus_result = self.client.table("sport_tip_consensus") \
+                .select("*") \
+                .eq("match_id", match_id) \
+                .single() \
+                .execute()
+            match_data["tip_consensus"] = consensus_result.data
+
+            return match_data
+        except Exception as e:
+            logger.error(f"Error getting sport match with tips: {e}")
+            return None
+
 
 async def init_database():
     """

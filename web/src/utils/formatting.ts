@@ -60,3 +60,32 @@ export function getConfidenceColor(confidence: number | undefined | null): strin
   if (percent >= 55) return 'text-yellow-600';
   return 'text-red-600';
 }
+
+export function formatSpread(spread: number | undefined | null): string {
+  if (spread === undefined || spread === null) return 'N/A';
+  return spread > 0 ? `+${spread.toFixed(1)}` : spread.toFixed(1);
+}
+
+export function formatScore(score: number | undefined | null): string {
+  if (score === undefined || score === null) return '-';
+  return Math.round(score).toString();
+}
+
+export function formatConsensusStrength(strength: string | undefined | null): string {
+  if (!strength) return 'N/A';
+  const labels: Record<string, string> = {
+    unanimous: 'Unanimous',
+    strong: 'Strong',
+    lean: 'Lean',
+    split: 'Split',
+  };
+  return labels[strength] || strength;
+}
+
+export function getConsensusColor(strength: string | undefined | null): string {
+  if (!strength) return 'text-gray-500';
+  if (strength === 'unanimous') return 'text-green-700';
+  if (strength === 'strong') return 'text-green-600';
+  if (strength === 'lean') return 'text-yellow-600';
+  return 'text-red-600';
+}

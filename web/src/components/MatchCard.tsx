@@ -4,6 +4,7 @@ import {
   formatProbability,
   formatConfidence,
   formatTimeUntil,
+  formatScore,
   getTipColor,
   getConfidenceColor,
 } from '@/utils/formatting';
@@ -75,6 +76,23 @@ export default function MatchCard({ match }: MatchCardProps) {
             </div>
           </div>
         </div>
+
+        {/* Predicted score */}
+        {match.home_predicted_score != null && match.away_predicted_score != null && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500">Predicted Score</span>
+              <span className="text-sm font-mono font-semibold text-gray-800">
+                {formatScore(match.home_predicted_score)} - {formatScore(match.away_predicted_score)}
+              </span>
+            </div>
+            {match.predicted_margin != null && (
+              <div className="text-xs text-gray-500 text-right">
+                Margin: {match.predicted_margin.toFixed(1)} pts
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tip and confidence */}
         {match.tip && (
