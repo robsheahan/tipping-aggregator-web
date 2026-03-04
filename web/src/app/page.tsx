@@ -68,25 +68,9 @@ export default function Home() {
 
   return (
     <div>
-      {/* Hero Section */}
-      <div className="text-center mb-12 max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full text-sm font-medium mb-6 ring-1 ring-inset ring-indigo-700/10">
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
-          Live odds from Australian bookmakers
-        </div>
-
-        <h1 className="text-5xl sm:text-6xl font-bold text-slate-900 mb-6 tracking-tight leading-tight px-4">
-          Master Your Sports
-          <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 py-1">
-            Tipping Strategy
-          </span>
-        </h1>
-
-        <p className="text-xl text-slate-600 leading-relaxed">
-          Aggregate probabilities from multiple bookmakers to make informed tipping decisions across all major sports.
-        </p>
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-900">Upcoming Matches</h1>
       </div>
 
       {/* Error State */}
@@ -136,14 +120,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Footer Note */}
-      {!loading && sports.length > 0 && (
-        <div className="mt-12 text-center">
-          <p className="text-sm text-slate-500">
-            Odds are aggregated from multiple Australian bookmakers and updated in real-time.
-          </p>
-        </div>
-      )}
     </div>
   );
 }
