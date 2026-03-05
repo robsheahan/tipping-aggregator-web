@@ -248,10 +248,10 @@ class SportAggregator:
         # Determine tip and confidence
         if avg_home_prob > avg_away_prob:
             tip = "home"
-            confidence = avg_home_prob - avg_away_prob
+            confidence = avg_home_prob
         else:
             tip = "away"
-            confidence = avg_away_prob - avg_home_prob
+            confidence = avg_away_prob
 
         # --- Spread aggregation ---
         home_spreads = []
@@ -281,16 +281,19 @@ class SportAggregator:
         if avg_home_spread is not None and avg_total is not None:
             # margin from the home team's perspective: positive means away favoured
             # home_spread is negative if home is favoured (e.g. -6.5)
-            predicted_margin = abs(avg_home_spread)
+            margin_raw = abs(avg_home_spread)
 
             if avg_home_spread <= 0:
                 # Home is favoured
-                home_predicted = (avg_total + predicted_margin) / 2
-                away_predicted = (avg_total - predicted_margin) / 2
+                home_predicted = round((avg_total + margin_raw) / 2)
+                away_predicted = round((avg_total - margin_raw) / 2)
             else:
                 # Away is favoured
-                away_predicted = (avg_total + predicted_margin) / 2
-                home_predicted = (avg_total - predicted_margin) / 2
+                away_predicted = round((avg_total + margin_raw) / 2)
+                home_predicted = round((avg_total - margin_raw) / 2)
+
+            # Derive margin from rounded scores so they're always consistent
+            predicted_margin = abs(home_predicted - away_predicted)
 
         now = datetime.now(timezone.utc).isoformat()
 
@@ -308,9 +311,9 @@ class SportAggregator:
             home_spread=round(avg_home_spread, 1) if avg_home_spread is not None else None,
             away_spread=round(avg_away_spread, 1) if avg_away_spread is not None else None,
             total_points=round(avg_total, 1) if avg_total is not None else None,
-            home_predicted_score=round(home_predicted, 1) if home_predicted is not None else None,
-            away_predicted_score=round(away_predicted, 1) if away_predicted is not None else None,
-            predicted_margin=round(predicted_margin, 1) if predicted_margin is not None else None,
+            home_predicted_score=home_predicted,
+            away_predicted_score=away_predicted,
+            predicted_margin=predicted_margin,
             contributing_providers=len(h2h_probs),
             last_updated=now,
             bookmaker_odds=bookmaker_odds_list,
