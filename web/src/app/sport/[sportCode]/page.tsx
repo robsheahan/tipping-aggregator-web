@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { getMatches } from '@/lib/api';
@@ -15,9 +15,28 @@ export default function SportPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshResult, setRefreshResult] = useState<string | null>(null);
 
   // Get sport config
   const sportConfig = getSportConfig(sportCode);
+
+  const loadMatches = useCallback(async () => {
+    if (!sportConfig) return;
+    try {
+      setLoading(true);
+      setError(null);
+      const matchesData = await getMatches({
+        league: sportCode,
+        upcoming_only: true,
+      });
+      setMatches(matchesData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load matches');
+    } finally {
+      setLoading(false);
+    }
+  }, [sportCode, sportConfig]);
 
   useEffect(() => {
     if (!sportConfig) {
@@ -25,27 +44,35 @@ export default function SportPage() {
       setLoading(false);
       return;
     }
-
-    async function loadMatches() {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const matchesData = await getMatches({
-          league: sportCode,
-          upcoming_only: true,
-        });
-
-        setMatches(matchesData);
-        setLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load matches');
-        setLoading(false);
-      }
-    }
-
     loadMatches();
-  }, [sportCode, sportConfig]);
+  }, [sportConfig, sportCode, loadMatches]);
+
+  async function handleRefreshOdds() {
+    setRefreshing(true);
+    setRefreshResult(null);
+    try {
+      const res = await fetch('/api/refresh-odds', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ league: sportCode }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
+      setRefreshResult(`Updated ${data.updated} match${data.updated !== 1 ? 'es' : ''}`);
+      // Re-fetch matches to show updated data
+      await loadMatches();
+    } catch (err) {
+      setRefreshResult(
+        `Failed: ${err instanceof Error ? err.message : 'Unknown error'}`
+      );
+    } finally {
+      setRefreshing(false);
+      // Clear result message after 5 seconds
+      setTimeout(() => setRefreshResult(null), 5000);
+    }
+  }
 
   if (!sportConfig) {
     return (
@@ -82,12 +109,41 @@ export default function SportPage() {
           Back to Sports
         </Link>
 
-        <div className="mb-4">
-          <h1 className="text-3xl font-bold text-gray-900">
-            {sportConfig.displayName}
-          </h1>
-          <p className="text-gray-600">{sportConfig.name}</p>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {sportConfig.displayName}
+            </h1>
+            <p className="text-gray-600">{sportConfig.name}</p>
+          </div>
+          <button
+            onClick={handleRefreshOdds}
+            disabled={refreshing}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {refreshing ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Updating...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Update Odds
+              </>
+            )}
+          </button>
         </div>
+        {refreshResult && (
+          <p className={`text-sm mb-2 ${refreshResult.startsWith('Failed') ? 'text-red-600' : 'text-green-600'}`}>
+            {refreshResult}
+          </p>
+        )}
       </div>
 
       {/* Error state */}
