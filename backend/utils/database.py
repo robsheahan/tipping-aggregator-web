@@ -10,7 +10,7 @@ from supabase import create_client, Client
 from loguru import logger
 
 from models.database import Meet, Race, RaceOdds, ExpertTip, ConsensusScore
-from models.sport_models import SportMatch, SportExpertTip, SportTipConsensus
+from models.sport_models import SportMatch, SportExpertTip, SportTipConsensus, SportTipSubmission
 
 class SupabaseClient:
     """
@@ -319,6 +319,78 @@ class SupabaseClient:
         except Exception as e:
             logger.error(f"Error getting sport match with tips: {e}")
             return None
+
+
+    # ========================================
+    # Tip Submission Methods
+    # ========================================
+
+    async def save_tip_submission(self, submission: SportTipSubmission):
+        """Save or update a tip submission record"""
+        try:
+            data = submission.dict()
+            result = self.client.table("sport_tip_submissions").upsert(
+                data, on_conflict="match_id,platform"
+            ).execute()
+            logger.debug(f"Saved tip submission: {submission.platform} - {submission.match_id}")
+            return result
+        except Exception as e:
+            logger.error(f"Error saving tip submission: {e}")
+            raise
+
+    async def get_pending_submissions(self, platform: Optional[str] = None) -> List[Dict]:
+        """
+        Get upcoming matches with consensus that haven't been submitted to a platform.
+        Returns matches + consensus joined data for matches that need submission.
+        """
+        try:
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc).isoformat()
+
+            # Get upcoming matches with consensus
+            query = self.client.table("sport_matches") \
+                .select("*, sport_tip_consensus(*)") \
+                .gte("commence_time", now) \
+                .order("commence_time")
+            result = query.execute()
+
+            matches_with_consensus = []
+            for match in result.data or []:
+                consensus = match.get("sport_tip_consensus")
+                # Handle list or single dict from join
+                if isinstance(consensus, list):
+                    consensus = consensus[0] if consensus else None
+                if not consensus or not consensus.get("consensus_team"):
+                    continue
+
+                # Check which platforms still need submission
+                platforms = [platform] if platform else [
+                    "afl_tipping", "nrl_tipping", "superbru", "espn_footytips"
+                ]
+
+                for plat in platforms:
+                    # Check if already submitted
+                    existing = self.client.table("sport_tip_submissions") \
+                        .select("status") \
+                        .eq("match_id", match["id"]) \
+                        .eq("platform", plat) \
+                        .execute()
+
+                    if existing.data:
+                        status = existing.data[0].get("status")
+                        if status in ("submitted", "skipped"):
+                            continue
+
+                    matches_with_consensus.append({
+                        "match": match,
+                        "consensus": consensus,
+                        "platform": plat,
+                    })
+
+            return matches_with_consensus
+        except Exception as e:
+            logger.error(f"Error getting pending submissions: {e}")
+            return []
 
 
 async def init_database():

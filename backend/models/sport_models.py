@@ -63,3 +63,15 @@ class SportTipConsensus(BaseModel):
     consensus_pct: Optional[float] = None       # 0-1
     consensus_strength: Optional[str] = None    # 'unanimous', 'strong', 'lean', 'split'
     avg_predicted_margin: Optional[float] = None
+
+
+class SportTipSubmission(BaseModel):
+    match_id: str
+    platform: str                               # 'afl_tipping', 'nrl_tipping', 'superbru', 'espn_footytips'
+    submitted_team: Optional[str] = None
+    consensus_team: Optional[str] = None
+    consensus_strength: Optional[str] = None
+    status: str = "pending"                     # 'pending', 'submitted', 'failed', 'skipped'
+    error_message: Optional[str] = None
+    screenshot_path: Optional[str] = None
+    submitted_at: Optional[str] = None          # ISO datetime string
