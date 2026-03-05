@@ -3,14 +3,13 @@ Expert Tips Scraper for AFL/NRL
 
 Sources:
 - Squiggle API (AFL) — stable public JSON API
-- AFL.com.au (AFL) — Playwright + BeautifulSoup
-- NRL.com (NRL) — Playwright + BeautifulSoup
-- Punters.com.au (AFL + NRL) — Playwright + BeautifulSoup
+- FootyForecaster (AFL + NRL) — Playwright + BeautifulSoup
 
 Each source is wrapped in try/except so failures don't break the pipeline.
 """
 
 import asyncio
+import re
 import httpx
 from typing import List, Dict, Optional
 from loguru import logger
@@ -35,16 +34,16 @@ AFL_TEAM_ALIASES: Dict[str, List[str]] = {
     "Fremantle": ["Fremantle", "Dockers", "Fremantle Dockers"],
     "Geelong Cats": ["Geelong", "Cats", "Geelong Cats"],
     "Gold Coast Suns": ["Gold Coast", "Suns", "Gold Coast Suns"],
-    "GWS Giants": ["GWS", "Giants", "GWS Giants", "Greater Western Sydney"],
+    "GWS Giants": ["GWS", "Giants", "GWS Giants", "Greater Western Sydney", "GW Sydney"],
     "Hawthorn": ["Hawthorn", "Hawks", "Hawthorn Hawks"],
     "Melbourne": ["Melbourne", "Demons", "Melbourne Demons"],
-    "North Melbourne": ["North Melbourne", "Kangaroos", "Roos", "North Melbourne Kangaroos"],
+    "North Melbourne": ["North Melbourne", "Kangaroos", "Roos", "North Melbourne Kangaroos", "Nth Melbourne"],
     "Port Adelaide": ["Port Adelaide", "Power", "Port Adelaide Power"],
     "Richmond": ["Richmond", "Tigers", "Richmond Tigers"],
     "St Kilda": ["St Kilda", "Saints", "St Kilda Saints"],
     "Sydney Swans": ["Sydney", "Swans", "Sydney Swans"],
     "West Coast Eagles": ["West Coast", "Eagles", "West Coast Eagles"],
-    "Western Bulldogs": ["Western Bulldogs", "Bulldogs", "Footscray"],
+    "Western Bulldogs": ["Western Bulldogs", "Bulldogs", "Footscray", "Wstn Bulldogs"],
 }
 
 NRL_TEAM_ALIASES: Dict[str, List[str]] = {
@@ -129,32 +128,14 @@ class SportTipsScraper:
             except Exception as e:
                 logger.error(f"Squiggle scraper failed: {e}")
 
-        # 2. AFL.com.au expert tips
-        if afl_matches and PLAYWRIGHT_AVAILABLE:
-            try:
-                tips = await self.scrape_afl_com(afl_matches)
-                all_tips.extend(tips)
-                logger.info(f"AFL.com.au: {len(tips)} tips")
-            except Exception as e:
-                logger.error(f"AFL.com.au scraper failed: {e}")
-
-        # 3. NRL.com expert tips
-        if nrl_matches and PLAYWRIGHT_AVAILABLE:
-            try:
-                tips = await self.scrape_nrl_com(nrl_matches)
-                all_tips.extend(tips)
-                logger.info(f"NRL.com: {len(tips)} tips")
-            except Exception as e:
-                logger.error(f"NRL.com scraper failed: {e}")
-
-        # 4. Punters.com.au (both sports)
+        # 2. FootyForecaster (AFL + NRL) — probability-based predictions
         if matches and PLAYWRIGHT_AVAILABLE:
             try:
-                tips = await self.scrape_punters(matches)
+                tips = await self.scrape_footyforecaster(matches)
                 all_tips.extend(tips)
-                logger.info(f"Punters.com.au: {len(tips)} tips")
+                logger.info(f"FootyForecaster: {len(tips)} tips")
             except Exception as e:
-                logger.error(f"Punters.com.au scraper failed: {e}")
+                logger.error(f"FootyForecaster scraper failed: {e}")
 
         logger.info(f"Total expert tips scraped: {len(all_tips)}")
         return all_tips
@@ -170,8 +151,6 @@ class SportTipsScraper:
         year = datetime.now().year
 
         async with httpx.AsyncClient(timeout=30) as client:
-            # Fetch tips for the current round
-            # Squiggle returns tips grouped by match with tipster predictions
             resp = await client.get(
                 "https://api.squiggle.com.au/",
                 params={"q": "tips", "year": year},
@@ -199,20 +178,17 @@ class SportTipsScraper:
             return tips
 
         for tip in squiggle_tips:
-            # Squiggle uses 'hteam' and 'ateam' fields
             sq_home = tip.get("hteam", "")
             sq_away = tip.get("ateam", "")
 
             sq_home_canonical = normalize_team_name(sq_home, "afl")
             sq_away_canonical = normalize_team_name(sq_away, "afl")
 
-            # Check if this tip is for our match
             if sq_home_canonical == home_canonical and sq_away_canonical == away_canonical:
                 tipped = tip.get("tip", "")
                 margin = tip.get("margin")
                 source_name = tip.get("sourcename", "Unknown")
 
-                # Determine which team was tipped
                 tipped_team = match_team_to_match(tipped, match["home_team"], match["away_team"], "afl")
                 if tipped_team:
                     tips.append({
@@ -226,193 +202,135 @@ class SportTipsScraper:
 
         return tips
 
-    # ----- AFL.com.au -----
+    # ----- FootyForecaster (AFL + NRL) -----
 
-    async def scrape_afl_com(self, afl_matches: List[Dict]) -> List[Dict]:
-        """Scrape expert tips from AFL.com.au"""
+    async def scrape_footyforecaster(self, matches: List[Dict]) -> List[Dict]:
+        """
+        Scrape predictions from FootyForecaster.com for both AFL and NRL.
+        Returns one tip per match with probability and predicted margin.
+        """
         tips = []
-
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()
-
-            try:
-                await page.goto("https://www.afl.com.au/tipping", wait_until="networkidle", timeout=30000)
-                await asyncio.sleep(2)
-
-                content = await page.content()
-                soup = BeautifulSoup(content, "lxml")
-
-                # Look for expert tip panels — the actual selectors may change
-                tip_panels = soup.select("[class*='tip'], [class*='expert'], [class*='prediction']")
-
-                for panel in tip_panels:
-                    try:
-                        expert = panel.select_one("[class*='name'], [class*='author']")
-                        team_el = panel.select_one("[class*='team'], [class*='pick']")
-
-                        if expert and team_el:
-                            expert_name = expert.get_text(strip=True)
-                            tipped_raw = team_el.get_text(strip=True)
-
-                            # Try to match to a specific match
-                            for match in afl_matches:
-                                tipped_team = match_team_to_match(
-                                    tipped_raw, match["home_team"], match["away_team"], "afl"
-                                )
-                                if tipped_team:
-                                    tips.append({
-                                        "match_id": match["id"],
-                                        "source": "afl.com.au",
-                                        "expert_name": expert_name,
-                                        "tipped_team": tipped_team,
-                                        "predicted_margin": None,
-                                        "sport": "afl",
-                                    })
-                                    break
-                    except Exception as e:
-                        logger.debug(f"Error parsing AFL.com.au tip panel: {e}")
-                        continue
-
-            except Exception as e:
-                logger.error(f"Error loading AFL.com.au: {e}")
-            finally:
-                await browser.close()
-
-        return tips
-
-    # ----- NRL.com -----
-
-    async def scrape_nrl_com(self, nrl_matches: List[Dict]) -> List[Dict]:
-        """Scrape expert tips from NRL.com"""
-        tips = []
-
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            page = await browser.new_page()
-
-            try:
-                await page.goto("https://www.nrl.com/tipping", wait_until="networkidle", timeout=30000)
-                await asyncio.sleep(2)
-
-                content = await page.content()
-                soup = BeautifulSoup(content, "lxml")
-
-                # Look for expert tip sections
-                tip_sections = soup.select("[class*='tip'], [class*='expert'], [class*='prediction']")
-
-                for section in tip_sections:
-                    try:
-                        expert = section.select_one("[class*='name'], [class*='author']")
-                        team_el = section.select_one("[class*='team'], [class*='pick']")
-
-                        if expert and team_el:
-                            expert_name = expert.get_text(strip=True)
-                            tipped_raw = team_el.get_text(strip=True)
-
-                            for match in nrl_matches:
-                                tipped_team = match_team_to_match(
-                                    tipped_raw, match["home_team"], match["away_team"], "nrl"
-                                )
-                                if tipped_team:
-                                    tips.append({
-                                        "match_id": match["id"],
-                                        "source": "nrl.com",
-                                        "expert_name": expert_name,
-                                        "tipped_team": tipped_team,
-                                        "predicted_margin": None,
-                                        "sport": "nrl",
-                                    })
-                                    break
-                    except Exception as e:
-                        logger.debug(f"Error parsing NRL.com tip section: {e}")
-                        continue
-
-            except Exception as e:
-                logger.error(f"Error loading NRL.com: {e}")
-            finally:
-                await browser.close()
-
-        return tips
-
-    # ----- Punters.com.au -----
-
-    async def scrape_punters(self, matches: List[Dict]) -> List[Dict]:
-        """Scrape tips from Punters.com.au for both AFL and NRL"""
-        tips = []
-
-        sport_urls = {
-            "afl": "https://www.punters.com.au/afl/tips/",
-            "nrl": "https://www.punters.com.au/nrl/tips/",
-        }
-
-        # Which sports do we have matches for?
         sports_needed = set(m["sport"] for m in matches)
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
 
             for sport in sports_needed:
-                url = sport_urls.get(sport)
-                if not url:
-                    continue
-
                 sport_matches = [m for m in matches if m["sport"] == sport]
-                page = await browser.new_page()
+                league = "AFL" if sport == "afl" else "NRL"
+                url = f"https://footyforecaster.com/{league}/RoundForecast"
 
+                page = await browser.new_page()
                 try:
-                    await page.goto(url, wait_until="networkidle", timeout=30000)
-                    await asyncio.sleep(2)
+                    await page.goto(url, wait_until="networkidle", timeout=20000)
+                    await asyncio.sleep(1)
+
+                    # Find and click the current/upcoming round link
+                    round_link = await self._find_current_round(page, league)
+                    if round_link:
+                        await round_link.click()
+                        await asyncio.sleep(2)
 
                     content = await page.content()
-                    soup = BeautifulSoup(content, "lxml")
+                    forecasts = self._parse_footyforecaster(content, sport)
+                    logger.info(f"FootyForecaster {league}: parsed {len(forecasts)} forecasts")
 
-                    # Look for tip entries
-                    tip_entries = soup.select("[class*='tip'], [class*='prediction'], [class*='pick']")
+                    # Match forecasts to our matches
+                    for forecast in forecasts:
+                        for match in sport_matches:
+                            home_canonical = normalize_team_name(match["home_team"], sport)
+                            ff_home_canonical = normalize_team_name(forecast["home_team"], sport)
+                            ff_away_canonical = normalize_team_name(forecast["away_team"], sport)
+                            away_canonical = normalize_team_name(match["away_team"], sport)
 
-                    for entry in tip_entries:
-                        try:
-                            expert = entry.select_one("[class*='name'], [class*='tipster']")
-                            team_el = entry.select_one("[class*='team'], [class*='selection']")
-                            margin_el = entry.select_one("[class*='margin'], [class*='points']")
-
-                            if expert and team_el:
-                                expert_name = expert.get_text(strip=True)
-                                tipped_raw = team_el.get_text(strip=True)
-                                margin = None
-                                if margin_el:
-                                    try:
-                                        margin_text = margin_el.get_text(strip=True).replace("+", "").replace("pts", "").strip()
-                                        margin = float(margin_text)
-                                    except ValueError:
-                                        pass
-
-                                for match in sport_matches:
-                                    tipped_team = match_team_to_match(
-                                        tipped_raw, match["home_team"], match["away_team"], sport
-                                    )
-                                    if tipped_team:
-                                        tips.append({
-                                            "match_id": match["id"],
-                                            "source": "punters.com.au",
-                                            "expert_name": expert_name,
-                                            "tipped_team": tipped_team,
-                                            "predicted_margin": margin,
-                                            "sport": sport,
-                                        })
-                                        break
-                        except Exception as e:
-                            logger.debug(f"Error parsing Punters.com.au entry: {e}")
-                            continue
+                            if ff_home_canonical == home_canonical and ff_away_canonical == away_canonical:
+                                tips.append({
+                                    "match_id": match["id"],
+                                    "source": "footyforecaster",
+                                    "expert_name": "FootyForecaster Model",
+                                    "tipped_team": match_team_to_match(
+                                        forecast["tipped_team"], match["home_team"], match["away_team"], sport
+                                    ) or forecast["tipped_team"],
+                                    "predicted_margin": forecast.get("margin"),
+                                    "sport": sport,
+                                })
+                                break
 
                 except Exception as e:
-                    logger.error(f"Error loading Punters.com.au for {sport}: {e}")
+                    logger.error(f"Error scraping FootyForecaster {league}: {e}")
                 finally:
                     await page.close()
-
-                # Rate limit between sport pages
-                await asyncio.sleep(2)
 
             await browser.close()
 
         return tips
+
+    async def _find_current_round(self, page, league: str):
+        """Find and return the link element for the current/nearest round."""
+        year = datetime.now().year
+
+        # Try common round name patterns
+        round_names = [
+            f"{year} Opening Round",
+            f"{year} Round 0",
+            f"{year} Round 1",
+        ]
+
+        # Also try to find the round that's closest to now
+        for i in range(24, 0, -1):
+            round_names.append(f"{year} Round {i}")
+
+        for name in round_names:
+            try:
+                link = page.locator(f"text={name}").first
+                if await link.is_visible(timeout=500):
+                    return link
+            except Exception:
+                continue
+
+        return None
+
+    def _parse_footyforecaster(self, html: str, sport: str) -> List[Dict]:
+        """
+        Parse FootyForecaster round forecast page.
+        Expected format per match:
+          "Team A v Team B (Venue)"
+          "Probability" "Team A XX.X% Team B YY.Y%"
+          "Forecast" "Team by N points"
+        """
+        soup = BeautifulSoup(html, "lxml")
+        text = soup.get_text(separator='\n')
+        lines = [l.strip() for l in text.split('\n') if l.strip()]
+
+        forecasts = []
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+
+            # Match pattern: "Team A v Team B (Venue)"
+            match_pattern = re.match(r'^(.+?)\s+v\s+(.+?)\s*\(', line)
+            if match_pattern:
+                home_team = match_pattern.group(1).strip()
+                away_team = match_pattern.group(2).strip()
+
+                # Look ahead for Forecast line with "by X points"
+                tipped_team = None
+                margin = None
+                for j in range(i + 1, min(i + 8, len(lines))):
+                    forecast_match = re.match(r'^(.+?)\s+by\s+(\d+)\s+points?', lines[j])
+                    if forecast_match:
+                        tipped_team = forecast_match.group(1).strip()
+                        margin = float(forecast_match.group(2))
+                        break
+
+                if tipped_team:
+                    forecasts.append({
+                        "home_team": home_team,
+                        "away_team": away_team,
+                        "tipped_team": tipped_team,
+                        "margin": margin,
+                    })
+
+            i += 1
+
+        return forecasts

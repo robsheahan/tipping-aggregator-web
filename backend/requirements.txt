@@ -5,13 +5,12 @@ pydantic==2.5.3
 pydantic-settings==2.1.0
 
 # HTTP and async
-httpx==0.26.0
+httpx==0.25.2
 aiohttp==3.9.1
 requests==2.31.0
 
 # Database
 supabase==2.3.4
-psycopg2-binary==2.9.9
 sqlalchemy==2.0.25
 
 # AI and NLP
@@ -35,7 +34,6 @@ pytz==2023.3
 # Testing
 pytest==7.4.4
 pytest-asyncio==0.23.3
-httpx-mock==0.12.1
 
 # Logging and monitoring
 loguru==0.7.2
