@@ -4,7 +4,7 @@
 
 set -e
 
-PROJECT_DIR="/Users/rob/tipping-aggregator"
+PROJECT_DIR="/home/robsheahan/tipping-aggregator"
 BACKEND_DIR="$PROJECT_DIR/backend"
 VENV_DIR="$PROJECT_DIR/venv"
 LOG_DIR="$BACKEND_DIR/logs"
@@ -27,6 +27,3 @@ fi
 # Run the sport aggregator
 cd "$BACKEND_DIR"
 python workers/sport_aggregator.py --once
-
-# Submit consensus tips to tipping platforms
-python workers/tip_submitter.py --once
