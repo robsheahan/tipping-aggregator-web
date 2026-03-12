@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { getTheOddsAPIClient } from '@/lib/odds/providers/theoddsapi';
 import { aggregateProviderOdds } from '@/lib/odds/aggregation';
-import { generateWeightMapForProviders } from '@/lib/odds/weighting';
+import { generateWeightMapForProviders, getDynamicWeights } from '@/lib/odds/weighting';
 import { getSportConfig } from '@/lib/config/sports';
 
 export async function GET(
@@ -168,6 +168,13 @@ async function fetchFromTheOddsAPI(
 
   if (!event) return null;
 
+  // Fetch accuracy data for dynamic weighting
+  const { data: accuracyData } = await supabase
+    .from('provider_accuracy')
+    .select('*')
+    .eq('provider_type', 'bookmaker')
+    .eq('league', league);
+
   const bookmakerOdds = client.extractBookmakerOdds(event);
   const predicted = client.extractPredictedScores(event);
 
@@ -195,7 +202,7 @@ async function fetchFromTheOddsAPI(
   const marketType = sportConfig.marketType as '2way' | '3way';
   const providerOdds = client.convertToProviderOdds(bookmakerOdds, marketType);
   const providerIds = providerOdds.map(po => po.provider);
-  const weights = generateWeightMapForProviders(providerIds, league, marketType);
+  const weights = getDynamicWeights(providerIds, accuracyData || []);
   const aggregated = aggregateProviderOdds(providerOdds, weights, marketType);
 
   return {

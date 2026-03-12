@@ -3,7 +3,7 @@
  * Simplified for serverless use without historical performance tracking
  */
 
-import { WeightMap } from './types';
+import { WeightMap, ProviderAccuracyRow } from './types';
 
 /**
  * Get provider weights for a given league and market type
@@ -98,32 +98,107 @@ export function applyWeightConstraints(
   return normalizeWeights(constrained);
 }
 
-// Future enhancement: Calculate weights based on historical Brier scores
-// This would require storing historical performance data
 /**
- * Calculate softmax weights from Brier scores (future enhancement)
- * @param brierScores Map of provider to Brier score
- * @param temperature Temperature parameter for softmax (default: 1.0)
- * @returns Weight map
+ * Softmax weight calculation.
+ * Converts scores to probability-like weights where higher scores get more weight.
+ * Temperature controls how much to differentiate: lower temp = more extreme weights.
  */
 export function calculateSoftmaxWeights(
-  brierScores: { [provider: string]: number },
-  temperature: number = 1.0
+  scores: Record<string, number>,
+  temperature: number = 0.5
 ): WeightMap {
-  const providers = Object.keys(brierScores);
+  const ids = Object.keys(scores);
+  if (ids.length === 0) return {};
 
-  // Negate scores (lower Brier is better)
-  const negScores = providers.map(p => -brierScores[p] / temperature);
+  // Find max for numerical stability
+  const maxScore = Math.max(...Object.values(scores));
 
-  // Apply softmax
-  const maxScore = Math.max(...negScores);
-  const expScores = negScores.map(s => Math.exp(s - maxScore));
-  const sumExp = expScores.reduce((sum, e) => sum + e, 0);
+  const expValues: Record<string, number> = {};
+  let sumExp = 0;
+
+  for (const id of ids) {
+    const exp = Math.exp((scores[id] - maxScore) / temperature);
+    expValues[id] = exp;
+    sumExp += exp;
+  }
 
   const weights: WeightMap = {};
-  providers.forEach((provider, i) => {
-    weights[provider] = expScores[i] / sumExp;
-  });
+  for (const id of ids) {
+    weights[id] = expValues[id] / sumExp;
+  }
 
   return weights;
+}
+
+/**
+ * Generate dynamic weights based on historical Brier scores.
+ * Falls back to equal weights when insufficient history exists.
+ *
+ * Lower Brier score = better accuracy = higher weight.
+ * Uses softmax on negated Brier scores so lower scores get higher weights.
+ */
+export function getDynamicWeights(
+  providerIds: string[],
+  accuracyData: ProviderAccuracyRow[],
+  minSampleSize: number = 20,
+  temperature: number = 0.5,
+  weightFloor: number = 0.03,
+  weightCeiling: number = 0.40
+): WeightMap {
+  if (providerIds.length === 0) return {};
+
+  // Build lookup of provider -> accuracy data
+  const accuracyMap = new Map<string, ProviderAccuracyRow>();
+  for (const row of accuracyData) {
+    if (row.provider_type === 'bookmaker') {
+      accuracyMap.set(row.provider_name, row);
+    }
+  }
+
+  // Separate into qualified (enough history) and unqualified
+  const qualified: { id: string; brierAvg: number }[] = [];
+  const unqualified: string[] = [];
+
+  for (const id of providerIds) {
+    const acc = accuracyMap.get(id);
+    if (acc && acc.total_predictions >= minSampleSize && acc.brier_score_avg != null) {
+      qualified.push({ id, brierAvg: acc.brier_score_avg });
+    } else {
+      unqualified.push(id);
+    }
+  }
+
+  // Need at least 3 qualified providers to use dynamic weighting
+  if (qualified.length < 3) {
+    return generateWeightMapForProviders(providerIds);
+  }
+
+  // Calculate softmax weights from negated Brier scores
+  // (negate because lower Brier = better, but softmax rewards higher values)
+  const negatedScores: Record<string, number> = {};
+  for (const q of qualified) {
+    negatedScores[q.id] = -q.brierAvg;
+  }
+
+  const softmaxWeights = calculateSoftmaxWeights(negatedScores, temperature);
+
+  // Apply floor/ceiling constraints
+  const constrained = applyWeightConstraints(softmaxWeights, weightFloor, weightCeiling);
+
+  // Assign unqualified providers the median weight from qualified set
+  const qualifiedWeightValues = Object.values(constrained).sort((a, b) => a - b);
+  const medianWeight =
+    qualifiedWeightValues.length % 2 === 0
+      ? (qualifiedWeightValues[qualifiedWeightValues.length / 2 - 1] +
+         qualifiedWeightValues[qualifiedWeightValues.length / 2]) /
+        2
+      : qualifiedWeightValues[Math.floor(qualifiedWeightValues.length / 2)];
+
+  const finalWeights: WeightMap = { ...constrained };
+  for (const id of unqualified) {
+    finalWeights[id] = medianWeight;
+  }
+
+  // Normalize to sum to 1.0
+  return normalizeWeights(finalWeights);
 }

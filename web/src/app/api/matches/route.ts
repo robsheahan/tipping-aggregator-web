@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { getSportConfig } from '@/lib/config/sports';
 import { getTheOddsAPIClient } from '@/lib/odds/providers/theoddsapi';
 import { aggregateProviderOdds } from '@/lib/odds/aggregation';
-import { generateWeightMapForProviders } from '@/lib/odds/weighting';
+import { generateWeightMapForProviders, getDynamicWeights } from '@/lib/odds/weighting';
 import { generateRoundsFromMatches } from '@/lib/rounds/roundMappings';
 
 export async function GET(request: NextRequest) {
@@ -153,6 +153,13 @@ async function fetchFromTheOddsAPI(
 
   const marketType = sportConfig.marketType as '2way' | '3way';
 
+  // Fetch accuracy data for dynamic weighting
+  const { data: accuracyData } = await supabase
+    .from('provider_accuracy')
+    .select('*')
+    .eq('provider_type', 'bookmaker')
+    .eq('league', league);
+
   return Promise.all(
     filteredEvents.map(async event => {
       try {
@@ -173,7 +180,7 @@ async function fetchFromTheOddsAPI(
 
         const providerOdds = client.convertToProviderOdds(bookmakerOdds, marketType);
         const providerIds = providerOdds.map(po => po.provider);
-        const weights = generateWeightMapForProviders(providerIds, league, marketType);
+        const weights = getDynamicWeights(providerIds, accuracyData || []);
         const aggregated = aggregateProviderOdds(providerOdds, weights, marketType);
         const predicted = client.extractPredictedScores(event);
 

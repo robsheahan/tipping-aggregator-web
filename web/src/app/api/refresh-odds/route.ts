@@ -18,7 +18,7 @@ import {
   normalizeOdds3Way,
 } from '@/lib/odds/conversion';
 import { aggregateProviderOdds } from '@/lib/odds/aggregation';
-import { generateWeightMapForProviders } from '@/lib/odds/weighting';
+import { generateWeightMapForProviders, getDynamicWeights } from '@/lib/odds/weighting';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -208,6 +208,13 @@ export async function POST(request: NextRequest) {
     const config = getSportConfig(league)!;
 
     try {
+      // Fetch accuracy data for dynamic weighting
+      const { data: accuracyData } = await supabase
+        .from('provider_accuracy')
+        .select('*')
+        .eq('provider_type', 'bookmaker')
+        .eq('league', league);
+
       // Fetch with all three markets
       const events = await fetchEventsWithAllMarkets(config.theoddsapiKey, apiKey);
       console.log(`TheOddsAPI returned ${events.length} events for ${league}`);
@@ -268,7 +275,7 @@ export async function POST(request: NextRequest) {
             });
 
             const providerIds = providerOdds.map((po) => po.provider);
-            const weights = generateWeightMapForProviders(providerIds, league, marketType);
+            const weights = getDynamicWeights(providerIds, accuracyData || []);
             const aggregated = aggregateProviderOdds(providerOdds, weights, marketType);
 
             homeProb = aggregated.home_prob;

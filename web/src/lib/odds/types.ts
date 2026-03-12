@@ -72,3 +72,14 @@ export interface NormalizedOdds {
   away: number;
   draw?: number;
 }
+
+export interface ProviderAccuracyRow {
+  provider_name: string;
+  provider_type: 'bookmaker' | 'expert';
+  league: string;
+  total_predictions: number;
+  total_correct: number;
+  brier_score_sum: number;
+  brier_score_avg: number | null;
+  accuracy_pct: number | null;
+}
