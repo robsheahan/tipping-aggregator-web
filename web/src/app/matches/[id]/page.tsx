@@ -335,7 +335,7 @@ export default function MatchDetailPage() {
                       {provider.provider}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <div className="text-sm text-gray-900">{provider.home_odds.toFixed(2)}</div>
+                      <div className="text-sm text-gray-900">{provider.home_odds != null ? provider.home_odds.toFixed(2) : '-'}</div>
                       <div className="text-xs text-gray-500">{formatProbability(provider.home_prob)}</div>
                     </td>
                     {hasDrawProb && (
@@ -347,7 +347,7 @@ export default function MatchDetailPage() {
                       </td>
                     )}
                     <td className="px-4 py-3 text-center">
-                      <div className="text-sm text-gray-900">{provider.away_odds.toFixed(2)}</div>
+                      <div className="text-sm text-gray-900">{provider.away_odds != null ? provider.away_odds.toFixed(2) : '-'}</div>
                       <div className="text-xs text-gray-500">{formatProbability(provider.away_prob)}</div>
                     </td>
                     <td className="px-4 py-3 text-center text-xs text-gray-500">

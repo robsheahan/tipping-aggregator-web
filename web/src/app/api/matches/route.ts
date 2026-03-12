@@ -175,6 +175,7 @@ async function fetchFromTheOddsAPI(
         const providerIds = providerOdds.map(po => po.provider);
         const weights = generateWeightMapForProviders(providerIds, league, marketType);
         const aggregated = aggregateProviderOdds(providerOdds, weights, marketType);
+        const predicted = client.extractPredictedScores(event);
 
         return {
           id: event.id,
@@ -184,6 +185,12 @@ async function fetchFromTheOddsAPI(
           kickoff_time: event.commence_time,
           status: 'scheduled',
           ...aggregated,
+          home_spread: predicted.homeSpread,
+          away_spread: predicted.awaySpread,
+          total_points: predicted.totalPoints,
+          home_predicted_score: predicted.homePredictedScore,
+          away_predicted_score: predicted.awayPredictedScore,
+          predicted_margin: predicted.predictedMargin,
         };
       } catch {
         return {

@@ -77,7 +77,7 @@ export class TheOddsAPIClient {
     const params = new URLSearchParams({
       apiKey: this.apiKey,
       regions: 'au', // Australian bookmakers
-      markets: 'h2h',
+      markets: 'h2h,spreads,totals',
       oddsFormat: 'decimal',
     });
 
@@ -119,7 +119,7 @@ export class TheOddsAPIClient {
     const params = new URLSearchParams({
       apiKey: this.apiKey,
       regions: 'au',
-      markets: 'h2h',
+      markets: 'h2h,spreads,totals',
       oddsFormat: 'decimal',
     });
 
@@ -141,6 +141,65 @@ export class TheOddsAPIClient {
       console.error(`Error fetching odds for event ${eventId}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Extract spread, total, and predicted scores from an event
+   */
+  extractPredictedScores(event: TheOddsAPIEvent): {
+    homeSpread: number | null;
+    awaySpread: number | null;
+    totalPoints: number | null;
+    homePredictedScore: number | null;
+    awayPredictedScore: number | null;
+    predictedMargin: number | null;
+  } {
+    const spreads: number[] = [];
+    const totals: number[] = [];
+
+    for (const bm of event.bookmakers) {
+      const spreadMarket = bm.markets.find((m) => m.key === 'spreads');
+      if (spreadMarket) {
+        const homeOutcome = spreadMarket.outcomes.find((o) => o.name === event.home_team);
+        if (homeOutcome && 'point' in homeOutcome) {
+          spreads.push((homeOutcome as { point: number }).point);
+        }
+      }
+      const totalsMarket = bm.markets.find((m) => m.key === 'totals');
+      if (totalsMarket) {
+        const overOutcome = totalsMarket.outcomes.find((o) => o.name === 'Over');
+        if (overOutcome && 'point' in overOutcome) {
+          totals.push((overOutcome as { point: number }).point);
+        }
+      }
+    }
+
+    const median = (arr: number[]) => {
+      if (arr.length === 0) return null;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    };
+
+    const homeSpread = median(spreads);
+    const totalPoints = median(totals);
+
+    if (homeSpread === null || totalPoints === null) {
+      return {
+        homeSpread, awaySpread: homeSpread !== null ? -homeSpread : null,
+        totalPoints,
+        homePredictedScore: null, awayPredictedScore: null, predictedMargin: null,
+      };
+    }
+
+    const homePredictedScore = (totalPoints - homeSpread) / 2;
+    const awayPredictedScore = (totalPoints + homeSpread) / 2;
+    const predictedMargin = Math.abs(homePredictedScore - awayPredictedScore);
+
+    return {
+      homeSpread, awaySpread: -homeSpread, totalPoints,
+      homePredictedScore, awayPredictedScore, predictedMargin,
+    };
   }
 
   /**

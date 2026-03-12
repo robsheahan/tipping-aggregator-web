@@ -87,15 +87,30 @@ async function fetchFromSupabase(matchId: string) {
     .single();
 
   // Build provider_odds from stored bookmaker JSON
+  // Stored format uses 'home'/'away'/'draw' for odds values
   const bookmakerOdds = match.bookmaker_odds || [];
-  const providerOdds = bookmakerOdds.map((bm: Record<string, unknown>) => ({
-    provider: bm.bookmaker as string,
-    home_prob: bm.home_prob as number,
-    away_prob: bm.away_prob as number,
-    home_odds: bm.home_odds as number,
-    away_odds: bm.away_odds as number,
-    timestamp: bm.last_update as string,
-  }));
+  const providerOdds = bookmakerOdds
+    .filter((bm: Record<string, unknown>) => bm.home != null && bm.away != null)
+    .map((bm: Record<string, unknown>) => {
+      const homeOdds = bm.home as number;
+      const awayOdds = bm.away as number;
+      const drawOdds = bm.draw as number | undefined;
+      const homeProb = 1 / homeOdds;
+      const awayProb = 1 / awayOdds;
+      const drawProb = drawOdds ? 1 / drawOdds : undefined;
+      // Normalize probabilities
+      const total = homeProb + awayProb + (drawProb || 0);
+      return {
+        provider: bm.bookmaker as string,
+        home_prob: homeProb / total,
+        away_prob: awayProb / total,
+        draw_prob: drawProb ? drawProb / total : undefined,
+        home_odds: homeOdds,
+        away_odds: awayOdds,
+        draw_odds: drawOdds,
+        timestamp: bm.last_update as string,
+      };
+    });
 
   return {
     id: match.id,
@@ -154,6 +169,8 @@ async function fetchFromTheOddsAPI(
   if (!event) return null;
 
   const bookmakerOdds = client.extractBookmakerOdds(event);
+  const predicted = client.extractPredictedScores(event);
+
   if (bookmakerOdds.length === 0) {
     return {
       id: event.id,
@@ -165,6 +182,12 @@ async function fetchFromTheOddsAPI(
       home_prob: null, away_prob: null, draw_prob: null,
       tip: null, confidence: null,
       contributing_providers: 0, last_updated: null,
+      home_spread: predicted.homeSpread,
+      away_spread: predicted.awaySpread,
+      total_points: predicted.totalPoints,
+      home_predicted_score: predicted.homePredictedScore,
+      away_predicted_score: predicted.awayPredictedScore,
+      predicted_margin: predicted.predictedMargin,
       provider_odds: [],
     };
   }
@@ -183,6 +206,12 @@ async function fetchFromTheOddsAPI(
     kickoff_time: event.commence_time,
     status: 'scheduled',
     ...aggregated,
+    home_spread: predicted.homeSpread,
+    away_spread: predicted.awaySpread,
+    total_points: predicted.totalPoints,
+    home_predicted_score: predicted.homePredictedScore,
+    away_predicted_score: predicted.awayPredictedScore,
+    predicted_margin: predicted.predictedMargin,
     provider_odds: providerOdds.map(po => ({
       provider: po.provider,
       home_prob: po.probabilities.home,
